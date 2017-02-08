@@ -6,3 +6,8 @@ This is the Code for DC rats project. We are exploring data on rodent abatement 
 
 ### Other resources
 Check out the "rats" channel on the Code for DC slack!
+
+
+### Heatmap for all 311 rodent abatement requests in 2006
+
+![2006 311 rodent abatement requests](https://github.com/eclee25/the-rat-hack/blob/gh-pages/images/allrecords_311_censusTract.png)
