@@ -10,4 +10,4 @@ Check out the "rats" channel on the Code for DC slack!
 
 ### Heatmap for all 311 rodent abatement requests in 2006
 
-![2006 311 rodent abatement requests](https://github.com/eclee25/the-rat-hack/blob/gh-pages/images/allrecords_311_censusTract.png)
+![2006 311 rodent abatement requests](https://github.com/eclee25/the-rat-hack/blob/gh-pages/images/allrecords311censusTract.png)
