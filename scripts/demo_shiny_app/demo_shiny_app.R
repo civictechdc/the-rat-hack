@@ -9,6 +9,8 @@ setwd(getSrcDirectory(function(x){}))
 
 load("./data/demo_shiny_app_data.RData")
 
+total_requests_service_code = "XXtotal_requestsXX" # Special key for artificially inserting 'Total Requests'
+
 ui <- navbarPage(title = "DC 311 Portal",
                  tabPanel("Explore",
                           tags$style(type = "text/css", "#map {height: calc(100vh - 80px) !important;}
@@ -17,13 +19,14 @@ ui <- navbarPage(title = "DC 311 Portal",
                           leafletOutput("map", width = "100%", height = "100%"),
                           absolutePanel(id = "controls", class = "panel panel-default", top = 60, right = 20,
                                         selectInput("selected_service_code", "Service Request Type",
-                                                    setNames(service_codes_and_descriptions$service_code,
-                                                             service_codes_and_descriptions$service_code_description)),
-                                        checkboxInput("normalize_by_total_requests", "Normalize by Total Requests", FALSE),
+                                                    setNames(c(total_requests_service_code, service_codes_and_descriptions$service_code),
+                                                             c("Total Requests", service_codes_and_descriptions$service_code_description))),
+                                        checkboxInput("normalize_by_total_requests", "Display as Percent of Total Requests", FALSE),
                                         sliderInput("selected_time_aggregation_value", "Month",
                                                     min(summarized_data$time_aggregation_value),
                                                     max(summarized_data$time_aggregation_value),
-                                                    value = min(summarized_data$time_aggregation_value), step = 1),
+                                                    value = min(summarized_data$time_aggregation_value),
+                                                    step = 1),
                                         plotOutput("request_count_time_series_plot", height = 200))
                           ),
                  tabPanel("Compare") #TODO: Merge Elizabeth's code
@@ -33,9 +36,14 @@ server <- function(input, output, session) {
   
   # Data for selected service code
   selected_service_code_data = reactive({
-    summarized_data %>%
-      filter(service_code == input$selected_service_code) %>%
-      left_join(total_request_data, by = c("year", "census_tract", "time_aggregation_value")) # adds 'totalrequests' column
+    if (input$selected_service_code == total_requests_service_code) {
+      total_request_data %>%
+        mutate(count = total_requests)
+    } else {
+      summarized_data %>%
+        filter(service_code == input$selected_service_code) %>%
+        left_join(total_request_data, by = c("year", "census_tract", "time_aggregation_value")) # adds 'total_requests' column 
+    }
   })
   
   # Geographic data with the number of requests for the selected service code mapped to census tract
@@ -117,7 +125,7 @@ server <- function(input, output, session) {
                 values = ifelse(input$normalize_by_total_requests,
                                 selected_service_code_data()$count/selected_service_code_data()$total_requests,
                                 selected_service_code_data()$count),
-                title = if(input$normalize_by_total_requests){"Request Fraction"}else{"Requests"}, opacity = 1)
+                title = if(input$normalize_by_total_requests){"Request Percentage"}else{"Requests"}, opacity = 1)
   })
   
   # Update time series chart
@@ -127,7 +135,7 @@ server <- function(input, output, session) {
                    y = if(input$normalize_by_total_requests){count/total_requests}else{count}, fill = is_selected),
                stat = "identity", show.legend = FALSE) +
       scale_fill_manual(values = c("black", tableau_color_pal(palette = "tableau10")(1))) +
-      labs(title = if(input$normalize_by_total_requests){"Request Fraction over Time"}else{"Service Requests over Time"}, x = "Month", y = "") +
+      labs(title = if(input$normalize_by_total_requests){"Request Percentage over Time"}else{"Service Requests over Time"}, x = "Month", y = "") +
       theme_bw(base_size = 14)
     if(input$normalize_by_total_requests){
       p + scale_y_continuous(labels = scales::percent)
