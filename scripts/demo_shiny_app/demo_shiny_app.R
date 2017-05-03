@@ -1,28 +1,15 @@
 library(shiny)
 library(leaflet)
-library(rgdal)
 library(tidyverse)
 library(ggthemes)
 library(forcats)
+library(sp)
 
 setwd(getSrcDirectory(function(x){}))
 
-# created from write_importData_for_shiny_app.R 
-# cols: service_code, service_code_description, time_aggregation_unit, time_aggregation_value, year, census_tract, count
-data_file = "./data/dc_311-2016_summarized.csv"
-summarized_data = read_csv(data_file, col_types = cols(service_code = col_character()))
+load("./data/demo_shiny_app_data.RData")
 
-# cols: time_aggregation_unit, time_aggregation_value, year, census_tract, totalrequests # TODO: consider renaming last column to total_requests
-total_requests_data_file = "./data/dc_311-2016_totalrequests.csv"
-total_request_data = read_csv(total_requests_data_file) %>%
-  rename(total_requests = totalrequests)
-
-census_tract_data = readOGR("../../data/dc_census_tract_shapefiles/census_2010/", "gz_2010_11_140_00_500k")
-
-service_codes_and_descriptions = summarized_data %>%
-  distinct(service_code, service_code_description)
-
-ui <- navbarPage(title = "311 Portal",
+ui <- navbarPage(title = "DC 311 Portal",
                  tabPanel("Explore",
                           tags$style(type = "text/css", "#map {height: calc(100vh - 80px) !important;}
                                      #controls {opacity: 0.85; padding: 10px}
@@ -41,22 +28,6 @@ ui <- navbarPage(title = "311 Portal",
                           ),
                  tabPanel("Compare") #TODO: Merge Elizabeth's code
                  )
-
-# ui <- bootstrapPage(
-#   tags$style(type = "text/css", "html, body {width:100%;height:100%} 
-#                                      #controls {opacity:0.85;padding:10px}
-#              #controls:hover {opacity:1.0}"),
-#   leafletOutput("map", width = "100%", height = "100%"),
-#   absolutePanel(id = "controls", class = "panel panel-default", top = 60, right = 20,
-#                 selectInput("selected_service_code", "Service Request Type",
-#                             setNames(service_codes_and_descriptions$service_code,
-#                                      service_codes_and_descriptions$service_code_description)),
-#                 sliderInput("selected_time_aggregation_value", "Month",
-#                             min(summarized_data$time_aggregation_value),
-#                             max(summarized_data$time_aggregation_value),
-#                             value = min(summarized_data$time_aggregation_value), step = 1),
-#                 plotOutput("request_count_time_series_plot", height = 200))
-# )
 
 server <- function(input, output, session) {
   
