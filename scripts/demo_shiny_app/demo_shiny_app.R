@@ -9,7 +9,7 @@ setwd(getSrcDirectory(function(x){}))
 
 load("./data/demo_shiny_app_data.RData")
 
-total_requests_service_code = "XXtotal_requestsXX" # Special key for artificially inserting 'Total Requests'
+TOTAL_REQUESTS_SERVICE_CODE <- "XXtotal_requestsXX" # Special key for artificially inserting 'Total Requests'
 
 ui <- navbarPage(title = "DC 311 Portal",
                  tabPanel("Explore",
@@ -19,7 +19,7 @@ ui <- navbarPage(title = "DC 311 Portal",
                           leafletOutput("map", width = "100%", height = "100%"),
                           absolutePanel(id = "controls", class = "panel panel-default", top = 60, right = 20,
                                         selectInput("selected_service_code", "Service Request Type",
-                                                    setNames(c(total_requests_service_code, service_codes_and_descriptions$service_code),
+                                                    setNames(c(TOTAL_REQUESTS_SERVICE_CODE, service_codes_and_descriptions$service_code),
                                                              c("Total Requests", service_codes_and_descriptions$service_code_description))),
                                         checkboxInput("normalize_by_total_requests", "Display as Percent of Total Requests", FALSE),
                                         sliderInput("selected_time_aggregation_value", "Month",
@@ -36,7 +36,7 @@ server <- function(input, output, session) {
   
   # Data for selected service code
   selected_service_code_data = reactive({
-    if (input$selected_service_code == total_requests_service_code) {
+    if (input$selected_service_code == TOTAL_REQUESTS_SERVICE_CODE) {
       total_request_data %>%
         mutate(count = total_requests)
     } else {
@@ -76,26 +76,26 @@ server <- function(input, output, session) {
   
   # Color palette that is updated to match the range of values for the selected service code
   palette <- reactive({
+ 
     if (!input$normalize_by_total_requests) {
-      colorBin(
-        palette = "plasma",
-        domain = selected_service_code_data() %>%
-          filter(!is.na(census_tract)) %>%
-          select(count) %>%
-          unlist %>%
-          range
-      ) 
+      domain <- c(0, selected_service_code_data() %>%
+        filter(!is.na(census_tract)) %>%
+        select(count) %>%
+        unlist %>%
+        max)
+      bins <- min(max(domain)-min(domain), 8)
     } else {
-      colorBin(
-        palette = "plasma",
-        domain = selected_service_code_data() %>%
-          filter(!is.na(census_tract)) %>%
-          mutate(relative_count = count / total_requests) %>%
-          select(relative_count) %>%
-          unlist %>%
-          range
-      ) 
+      domain <- c(0, selected_service_code_data() %>%
+        filter(!is.na(census_tract)) %>%
+        mutate(relative_count = count / total_requests) %>%
+        select(relative_count) %>%
+        unlist %>%
+        max)
+      bins <- 8
     }
+    colorBin(palette = "plasma",
+             domain = domain,
+             bins = bins)
   })
   
   # Update polygons when service code or month/week is changed
@@ -119,12 +119,32 @@ server <- function(input, output, session) {
   
   # Update legend when service code is changed
   observe({
+    label_formatter <- function(prefix = "", suffix = "", between = " &ndash; ", digits = 3, 
+                                big.mark = ",", transform = identity) {
+        function(type = "bin", cuts) {
+          formatNum <- function(x) {
+            format(round(transform(x), digits), trim = TRUE, scientific = FALSE, 
+                   big.mark = big.mark)
+          }
+          n <- length(cuts)
+          if (input$normalize_by_total_requests) {
+            cuts <- paste0(formatNum(100*cuts), "%")
+            paste0(prefix, cuts[-n], between, cuts[-1])
+          } else { # Given that all cuts will be integers make bounds more clear
+            paste0(prefix, formatNum(cuts[-n]),
+                   ifelse(cuts[-1]-1>cuts[-n], paste0(between, formatNum(cuts[-1]-1)), ""), 
+                   suffix) #
+          }
+        }
+    }
+    
     leafletProxy("map") %>%
       clearControls() %>%
       addLegend("bottomleft", pal = palette(),
                 values = ifelse(input$normalize_by_total_requests,
                                 selected_service_code_data()$count/selected_service_code_data()$total_requests,
                                 selected_service_code_data()$count),
+                labFormat = label_formatter(),
                 title = if(input$normalize_by_total_requests){"Request Percentage"}else{"Requests"}, opacity = 1)
   })
   
