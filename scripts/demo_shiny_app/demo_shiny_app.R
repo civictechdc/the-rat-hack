@@ -31,33 +31,32 @@ ui <- navbarPage(title = "DC 311 Portal",
                           ),
                  tabPanel("Compare",
                           tags$style(type = "text/css", 
-                                     "#compare_leftmap {height: calc(100vh - 80px) !important; float: left}
-                                      #compare_rightmap {height: calc(100vh - 80px) !important; float: left}
-                                      #compare_controls {opacity: 0.85; padding: 10px}
-                                      #compate_controls:hover {opacity: 1.0}"), # Setting map height this way (CSS3) to fill screen in the tab panel
-                          leafletOutput("compare_leftmap", width = "50%", height = "80%"),
-                          leafletOutput("compare_rightmap", width = "50%", height = "80%"),
-                          absolutePanel(id = "compare_controls", class = "panel panel-default", bottom = 60, width = "50%",
-                                        selectizeInput("compare_selected_service_code_left", "Service Request Type (Left)",
-                                                    setNames(c(TOTAL_REQUESTS_SERVICE_CODE, service_codes_and_descriptions$service_code),
-                                                             c("Total Requests", service_codes_and_descriptions$service_code_description)),
-                                                    options = list(
-                                                      placeholder = 'Please select an option below',
-                                                      onInitialize = I('function() { this.setValue(""); }')
-                                                    )),
-                                        selectizeInput("compare_selected_service_code_right", "Service Request Type (Right)",
-                                                    setNames(c(TOTAL_REQUESTS_SERVICE_CODE, service_codes_and_descriptions$service_code),
-                                                             c("Total Requests", service_codes_and_descriptions$service_code_description)),
-                                                    options = list(
-                                                      placeholder = 'Please select an option below',
-                                                      onInitialize = I('function() { this.setValue(""); }')
-                                                    )),
-                                        checkboxInput("compare_normalize_by_total_requests", "Normalize by Total Requests", FALSE),
-                                        sliderInput("compare_selected_time_aggregation_value", "Month",
-                                                    min(summarized_data$time_aggregation_value),
-                                                    max(summarized_data$time_aggregation_value),
-                                                    value = min(summarized_data$time_aggregation_value), step = 1))
+                                    "#compare_leftmap {height: calc(100vh - 360px) !important; float: left}
+                                     #compare_rightmap {height: calc(100vh - 360px) !important; float: left}
+                                     #compare_controls {padding: 10px; margin:auto}"), # Setting map height this way (CSS3) to fill screen in the tab panel,
+                          leafletOutput("compare_leftmap", width = "50%", height = "auto"),
+                          leafletOutput("compare_rightmap", width = "50%", height = "auto"),
+                          fluidRow(id = "compare_controls",
+                            column(4,
+                              selectInput("compare_selected_service_code_left", "Service Request Type (left)", 
+                                               setNames(c(TOTAL_REQUESTS_SERVICE_CODE, service_codes_and_descriptions$service_code),
+                                                             c("Total Requests", service_codes_and_descriptions$service_code_description))),     
+                              plotOutput("compare_request_count_time_series_plot_left", height = 200, width = 300)        
+                            ),
+                            column(4,
+                              selectInput("compare_selected_service_code_right", "Service Request Type (right)",
+                                               setNames(c(TOTAL_REQUESTS_SERVICE_CODE, service_codes_and_descriptions$service_code),
+                                                             c("Total Requests", service_codes_and_descriptions$service_code_description))),     
+                              plotOutput("compare_request_count_time_series_plot_right", height = 200, width = 300)       
+                            ),
+                            column(4,
+                              br(),
+                              sliderInput("compare_selected_time_aggregation_value", "Month", min(summarized_data$time_aggregation_value), max(summarized_data$time_aggregation_value), value = min(summarized_data$time_aggregation_value), step = 1),
+                              checkboxInput("compare_normalize_by_total_requests", "Normalize by Total Requests", FALSE)
+                            )
                           )
+                          ),
+                 tabPanel("Description", uiOutput("description"))
                  )
 
 server <- function(input, output, session) {
@@ -172,6 +171,23 @@ server <- function(input, output, session) {
                 labFormat = label_formatter(),
                 title = if(normalize_by_total_requests){"Request Percentage"}else{"Requests"}, opacity = 1)
   }
+
+  update_request_time_series_plot <- function(selected_time_series_data,
+                                              normalize_by_total_requests){
+    p = ggplot(selected_time_series_data) +
+      geom_bar(aes(x = as.factor(time_aggregation_value),
+                   y = if(normalize_by_total_requests){count/total_requests}else{count}, fill = is_selected),
+               stat = "identity", show.legend = FALSE) +
+      scale_fill_manual(values = c("black", tableau_color_pal(palette = "tableau10")(1))) +
+      labs(title = if(normalize_by_total_requests){"Request Percentage over Time"}else{"Service Requests over Time"}, x = "Month", y = "") +
+      theme_bw(base_size = 14) +
+      theme(axis.title.y = element_blank())
+    if(normalize_by_total_requests){
+      p + scale_y_continuous(labels = scales::percent)
+    } else {
+      p
+    }
+  }
   
   #####
   # 'Explore' tab
@@ -225,23 +241,15 @@ server <- function(input, output, session) {
                   explore_palette(),
                   input$explore_normalize_by_total_requests)
   })
-  
+
   # Update time series chart
   output$explore_request_count_time_series_plot <- renderPlot({
-    p = ggplot(explore_time_series_data()) +
-      geom_bar(aes(x = as.factor(time_aggregation_value),
-                   y = if(input$explore_normalize_by_total_requests){count/total_requests}else{count}, fill = is_selected),
-               stat = "identity", show.legend = FALSE) +
-      scale_fill_manual(values = c("black", tableau_color_pal(palette = "tableau10")(1))) +
-      labs(title = if(input$explore_normalize_by_total_requests){"Request Percentage over Time"}else{"Service Requests over Time"}, x = "Month", y = "") +
-      theme_bw(base_size = 14)
-    if(input$explore_normalize_by_total_requests){
-      p + scale_y_continuous(labels = scales::percent)
-    } else {
-      p
-    }
+    update_request_time_series_plot(explore_time_series_data(), 
+                                    input$explore_normalize_by_total_requests)
   })
   
+
+
   #####
   # 'Compare' tab
   #
@@ -272,37 +280,38 @@ server <- function(input, output, session) {
                  input$compare_normalize_by_total_requests)
   })
   
-  # #### Data for the time series chart of requests for the selected service code ####
-  # # left panel
-  # time_series_data_left <- reactive({
-  #   selected_service_code_data_left() %>%
-  #     group_by(time_aggregation_value) %>%
-  #     summarize(count = sum(count),
-  #               total_requests = sum(total_requests)) %>%
-  #     mutate(is_selected = ifelse(time_aggregation_value == input$selected_time_aggregation_value, TRUE, FALSE))
-  # })
-  # 
-  # # right panel
-  # time_series_data_right <- reactive({
-  #   selected_service_code_data_right() %>%
-  #     group_by(time_aggregation_value) %>%
-  #     summarize(count = sum(count),
-  #               total_requests = sum(total_requests)) %>%
-  #     mutate(is_selected = ifelse(time_aggregation_value == input$selected_time_aggregation_value, TRUE, FALSE))
-  # })
+
+  #### Data for the time series chart of requests for the selected service code ####
+  # left panel
+  compare_time_series_data_left <- reactive({
+    compare_selected_service_code_data_left() %>%
+      group_by(time_aggregation_value) %>%
+      summarize(count = sum(count),
+                total_requests = sum(total_requests)) %>%
+      mutate(is_selected = ifelse(time_aggregation_value == input$compare_selected_time_aggregation_value, TRUE, FALSE))
+  })
+  
+  # right panel
+  compare_time_series_data_right <- reactive({
+    compare_selected_service_code_data_right() %>%
+      group_by(time_aggregation_value) %>%
+      summarize(count = sum(count),
+                total_requests = sum(total_requests)) %>%
+      mutate(is_selected = ifelse(time_aggregation_value == input$compare_selected_time_aggregation_value, TRUE, FALSE))
+  })
   
   #### Initialize maps ####
   # left panel
   output$compare_leftmap <- renderLeaflet({
     leaflet() %>%
-      setView(lng = -77.0369, lat = 38.9072, zoom = 12) %>%
+      setView(lng = -77.0369, lat = 38.9072, zoom = 11) %>%
       addProviderTiles("CartoDB.PositronNoLabels")
   })
   
   # right panel
   output$compare_rightmap <- renderLeaflet({
     leaflet() %>%
-      setView(lng = -77.0369, lat = 38.9072, zoom = 12) %>%
+      setView(lng = -77.0369, lat = 38.9072, zoom = 11) %>%
       addProviderTiles("CartoDB.PositronNoLabels")
   })
   
@@ -350,6 +359,41 @@ server <- function(input, output, session) {
                   compare_palette_right(),
                   input$compare_normalize_by_total_requests)
   })
+
+  #### Update time series chart ####
+  # left
+  output$compare_request_count_time_series_plot_left <- renderPlot({
+    update_request_time_series_plot(compare_time_series_data_left(), 
+                                    input$compare_normalize_by_total_requests)
+  })
+
+  # right
+  output$compare_request_count_time_series_plot_right <- renderPlot({
+    update_request_time_series_plot(compare_time_series_data_right(), 
+                                    input$compare_normalize_by_total_requests)
+  })
+
+
+  #####
+  # 'Description' tab
+  #
+
+  output$description <- renderUI({
+    list(
+    h3("The project"),
+    p("Our goal is to enable the visualization and comparison of DC 311 service request data. This application, developed in R and using Shiny, visualizes all service requests from 2016."),
+    h3("Who we are"),
+    p("Code for DC is a group of volunteers interested in making a difference and improving the lives of the people of the District of Columbia through open data and data analysis. Founded in 2012, we are a non-partisan, non-political group of volunteer civic hackers working together to solve local issues and help people engage with the city."),
+    a(href ="https://codefordc.org/index.html", "[Check us out on the Code for DC website]"),
+    tags$hr(),
+    h4("Maintainers"),
+    p("Elizabeth Lee -- 'eclee25' at 'gmail' dot 'com'"),
+    p("Jason Asher -- 'jason.m.asher' at 'gmail' dot 'com'"),    
+    tags$hr()
+    )
+  })
+
+
 }
 
 shinyApp(ui, server)
