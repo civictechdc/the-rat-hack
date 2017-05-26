@@ -12,55 +12,52 @@ load("./data/demo_shiny_app_data.RData")
 TOTAL_REQUESTS_SERVICE_CODE <- "XXtotal_requestsXX" # Special key for artificially inserting 'Total Requests'
 
 ui <- navbarPage(title = "DC 311 Portal",
-                  id="tabs",
-
-                   tabPanel("Explore",
-                            tags$style(type = "text/css", "#explore_map {height: calc(100vh - 80px) !important;}
-                                       #explore_controls {opacity: 0.85; padding: 10px}
-                                       #explore_controls:hover {opacity: 1.0}"), # Setting map height this way (CSS3) to fill screen in the tab panel
-                            leafletOutput("explore_map", width = "100%", height = "100%"),
-                            absolutePanel(id = "explore_controls", class = "panel panel-default", top = 60, right = 20,
-                                          selectInput("explore_selected_service_code", "Service Request Type",
-                                                      setNames(c(TOTAL_REQUESTS_SERVICE_CODE, service_codes_and_descriptions$service_code),
-                                                               c("Total Requests", service_codes_and_descriptions$service_code_description))),
-                                          checkboxInput("explore_normalize_by_total_requests", "Display as Percent of Total Requests", FALSE),
-                                          sliderInput("explore_selected_time_aggregation_value", "Month",
-                                                      min(summarized_data$time_aggregation_value),
-                                                      max(summarized_data$time_aggregation_value),
-                                                      value = min(summarized_data$time_aggregation_value),
-                                                      step = 1),
-                                          plotOutput("explore_request_count_time_series_plot", height = 200))
+                 id="tabs",
+                 tabPanel("Explore",
+                          tags$style(type = "text/css", "#explore_map {height: calc(100vh - 80px) !important;}
+                                     #explore_controls {opacity: 0.85; padding: 10px}
+                                     #explore_controls:hover {opacity: 1.0}"), # Setting map height this way (CSS3) to fill screen in the tab panel
+                          leafletOutput("explore_map", width = "100%", height = "100%"),
+                          absolutePanel(id = "explore_controls", class = "panel panel-default", top = 60, right = 20,
+                                        selectInput("explore_selected_service_code", "Service Request Type",
+                                                    setNames(c(TOTAL_REQUESTS_SERVICE_CODE, service_codes_and_descriptions$service_code),
+                                                             c("Total Requests", service_codes_and_descriptions$service_code_description))),
+                                        checkboxInput("explore_normalize_by_total_requests", "Display as Percent of Total Requests", FALSE),
+                                        sliderInput("explore_selected_time_aggregation_value", "Month",
+                                                    min(summarized_data$time_aggregation_value),
+                                                    max(summarized_data$time_aggregation_value),
+                                                    value = min(summarized_data$time_aggregation_value),
+                                                    step = 1),
+                                        plotOutput("explore_request_count_time_series_plot", height = 200))
+                          ),
+                 tabPanel("Compare",
+                          tags$style(type = "text/css",
+                                    "#compare_leftmap {height: calc(100vh - 360px) !important; float: left}
+                                     #compare_rightmap {height: calc(100vh - 360px) !important; float: left}
+                                     #compare_controls {padding: 10px; margin:auto}"), # Setting map height this way (CSS3) to fill screen in the tab panel,
+                          leafletOutput("compare_leftmap", width = "50%", height = "auto"),
+                          leafletOutput("compare_rightmap", width = "50%", height = "auto"),
+                          fluidRow(id = "compare_controls",
+                            column(4,
+                              selectInput("compare_selected_service_code_left", "Service Request Type (left)",
+                                               setNames(c(TOTAL_REQUESTS_SERVICE_CODE, service_codes_and_descriptions$service_code),
+                                                             c("Total Requests", service_codes_and_descriptions$service_code_description))),
+                              plotOutput("compare_request_count_time_series_plot_left", height = 200, width = 300)
                             ),
-                   tabPanel("Compare",
-                            tags$style(type = "text/css",
-                                      "#compare_leftmap {height: calc(100vh - 360px) !important; float: left}
-                                       #compare_rightmap {height: calc(100vh - 360px) !important; float: left}
-                                       #compare_controls {padding: 10px; margin:auto}"), # Setting map height this way (CSS3) to fill screen in the tab panel,
-                            leafletOutput("compare_leftmap", width = "50%", height = "auto"),
-                            leafletOutput("compare_rightmap", width = "50%", height = "auto"),
-                            fluidRow(id = "compare_controls",
-                              column(4,
-                                selectInput("compare_selected_service_code_left", "Service Request Type (left)",
-                                                 setNames(c(TOTAL_REQUESTS_SERVICE_CODE, service_codes_and_descriptions$service_code),
-                                                               c("Total Requests", service_codes_and_descriptions$service_code_description))),
-                                plotOutput("compare_request_count_time_series_plot_left", height = 200, width = 300)
-                              ),
-                              column(4,
-                                selectInput("compare_selected_service_code_right", "Service Request Type (right)",
-                                                 setNames(c(TOTAL_REQUESTS_SERVICE_CODE, service_codes_and_descriptions$service_code),
-                                                               c("Total Requests", service_codes_and_descriptions$service_code_description))),
-                                plotOutput("compare_request_count_time_series_plot_right", height = 200, width = 300)
-                              ),
-                              column(4,
-                                br(),
-                                sliderInput("compare_selected_time_aggregation_value", "Month", min(summarized_data$time_aggregation_value), max(summarized_data$time_aggregation_value), value = min(summarized_data$time_aggregation_value), step = 1),
-                                checkboxInput("compare_normalize_by_total_requests", "Normalize by Total Requests", FALSE)
-                              )
+                            column(4,
+                              selectInput("compare_selected_service_code_right", "Service Request Type (right)",
+                                               setNames(c(TOTAL_REQUESTS_SERVICE_CODE, service_codes_and_descriptions$service_code),
+                                                             c("Total Requests", service_codes_and_descriptions$service_code_description))),
+                              plotOutput("compare_request_count_time_series_plot_right", height = 200, width = 300)
+                            ),
+                            column(4,
+                              br(),
+                              sliderInput("compare_selected_time_aggregation_value", "Month", min(summarized_data$time_aggregation_value), max(summarized_data$time_aggregation_value), value = min(summarized_data$time_aggregation_value), step = 1),
+                              checkboxInput("compare_normalize_by_total_requests", "Normalize by Total Requests", FALSE)
                             )
-                            ),
+                          )
+                        ),
                    tabPanel("Description", uiOutput("description"))
-
-
                  )
 
 server <- function(input, output, session) {
@@ -284,7 +281,6 @@ server <- function(input, output, session) {
                  input$compare_normalize_by_total_requests)
   })
 
-
   #### Data for the time series chart of requests for the selected service code ####
   # left panel
   compare_time_series_data_left <- reactive({
@@ -312,7 +308,6 @@ server <- function(input, output, session) {
       addProviderTiles("CartoDB.PositronNoLabels")
   })
 
-
   # right panel
   output$compare_rightmap <- renderLeaflet({
     leaflet() %>%
@@ -333,20 +328,17 @@ server <- function(input, output, session) {
                 input$compare_normalize_by_total_requests)
   })
 
-  # observe errors when not on compare tab
-  # left
-
-
-
   observe({
     if (identical(input$tabs, "Compare")) {
 
     #### Update polygons when service code or month/week is changed ####
+    # left
 
     update_polygons("compare_leftmap",
                     compare_map_data_left(),
                     compare_palette_left())
 
+    # right
     update_polygons("compare_rightmap",
                     compare_map_data_right(),
                     compare_palette_right())
@@ -366,10 +358,6 @@ server <- function(input, output, session) {
   })
 
 
-
-
-
-
   #### Update time series chart ####
   # left
   output$compare_request_count_time_series_plot_left <- renderPlot({
@@ -382,12 +370,6 @@ server <- function(input, output, session) {
     update_request_time_series_plot(compare_time_series_data_right(),
                                     input$compare_normalize_by_total_requests)
   })
-
-
-  # outputOptions(output, "compare_leftmap", suspendWhenHidden = FALSE)
-  # outputOptions(output, "compare_request_count_time_series_plot_left", suspendWhenHidden = FALSE)
-  # outputOptions(output, "compare_rightmap", suspendWhenHidden = FALSE)
-  # outputOptions(output, "compare_request_count_time_series_plot_right", suspendWhenHidden = FALSE)
 
   #####
   # 'Description' tab
