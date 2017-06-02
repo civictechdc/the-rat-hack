@@ -30,7 +30,7 @@ ui <- navbarPage(title = "DC 311 Portal",
                                         plotOutput("explore_request_count_time_series_plot", height = 200))
                           ),
                  tabPanel("Compare",
-                          tags$style(type = "text/css", 
+                          tags$style(type = "text/css",
                                     "#compare_leftmap {height: calc(100vh - 360px) !important; float: left}
                                      #compare_rightmap {height: calc(100vh - 360px) !important; float: left}
                                      #compare_controls {padding: 10px; margin:auto}"), # Setting map height this way (CSS3) to fill screen in the tab panel,
@@ -38,21 +38,34 @@ ui <- navbarPage(title = "DC 311 Portal",
                           leafletOutput("compare_rightmap", width = "50%", height = "auto"),
                           fluidRow(id = "compare_controls",
                             column(4,
-                              selectInput("compare_selected_service_code_left", "Service Request Type (left)", 
+                              checkboxInput("single_service", "Single Service Request", FALSE),
+                              checkboxInput("single_time", "Single Time Frame", FALSE),
+                              conditionalPanel( condition = "input.single_service == true",
+                              selectInput("compare_selected_service_code_single", "Service Request Type",
                                                setNames(c(TOTAL_REQUESTS_SERVICE_CODE, service_codes_and_descriptions$service_code),
-                                                             c("Total Requests", service_codes_and_descriptions$service_code_description))),     
-                              plotOutput("compare_request_count_time_series_plot_left", height = 200, width = 300)        
-                            ),
-                            column(4,
+                                                             c("Total Requests", service_codes_and_descriptions$service_code_description)))),
+
+                              conditionalPanel( condition = "input.single_service == false",
+                              selectInput("compare_selected_service_code_left", "Service Request Type (left)",
+                                               setNames(c(TOTAL_REQUESTS_SERVICE_CODE, service_codes_and_descriptions$service_code),
+                                                             c("Total Requests", service_codes_and_descriptions$service_code_description))),
                               selectInput("compare_selected_service_code_right", "Service Request Type (right)",
                                                setNames(c(TOTAL_REQUESTS_SERVICE_CODE, service_codes_and_descriptions$service_code),
-                                                             c("Total Requests", service_codes_and_descriptions$service_code_description))),     
-                              plotOutput("compare_request_count_time_series_plot_right", height = 200, width = 300)       
+                                                             c("Total Requests", service_codes_and_descriptions$service_code_description)))),
+                               conditionalPanel( condition = "input.single_time == true",
+                               sliderInput("compare_selected_time_aggregation_value_single", "Month", min(summarized_data$time_aggregation_value), max(summarized_data$time_aggregation_value), value = min(summarized_data$time_aggregation_value), step = 1)
+                               ),
+                               conditionalPanel( condition = "input.single_time == false",
+                               sliderInput("compare_selected_time_aggregation_value_left", "Month (left)", min(summarized_data$time_aggregation_value), max(summarized_data$time_aggregation_value), value = min(summarized_data$time_aggregation_value), step = 1),
+                               sliderInput("compare_selected_time_aggregation_value_right", "Month (right)", min(summarized_data$time_aggregation_value), max(summarized_data$time_aggregation_value), value = min(summarized_data$time_aggregation_value), step = 1)
+                               ),
+
+
+                              checkboxInput("compare_normalize_by_total_requests", "Normalize by Total Requests", FALSE)
                             ),
                             column(4,
-                              br(),
-                              sliderInput("compare_selected_time_aggregation_value", "Month", min(summarized_data$time_aggregation_value), max(summarized_data$time_aggregation_value), value = min(summarized_data$time_aggregation_value), step = 1),
-                              checkboxInput("compare_normalize_by_total_requests", "Normalize by Total Requests", FALSE)
+                              plotOutput("compare_request_count_time_series_plot_left", height = 200, width = 300),
+                              plotOutput("compare_request_count_time_series_plot_right", height = 200, width = 300)
                             )
                           )
                           ),
@@ -60,12 +73,12 @@ ui <- navbarPage(title = "DC 311 Portal",
                  )
 
 server <- function(input, output, session) {
-  
+
   #####
   # Helper functions
   # These are used to reduce redundant code across tabs
   #
-  
+
   get_selected_service_code_data <- function(selected_service_code) {
     if (selected_service_code == TOTAL_REQUESTS_SERVICE_CODE) {
       total_request_data %>%
@@ -73,10 +86,10 @@ server <- function(input, output, session) {
     } else {
       summarized_data %>%
         filter(service_code == selected_service_code) %>%
-        left_join(total_request_data, by = c("year", "census_tract", "time_aggregation_value")) # adds 'total_requests' column 
+        left_join(total_request_data, by = c("year", "census_tract", "time_aggregation_value")) # adds 'total_requests' column
     }
   }
-  
+
   get_map_data <- function(selected_service_code_data,
                            selected_time_aggregation_value,
                            normalize_by_total_requests) {
@@ -88,7 +101,7 @@ server <- function(input, output, session) {
               mutate(map_metric = if(normalize_by_total_requests){count/total_requests}else{count}),
             by = "TRACT")
   }
-  
+
   get_palette <- function(selected_service_code_data,
                           normalize_by_total_requests) {
     if (nrow(selected_service_code_data) == 0) {
@@ -100,7 +113,7 @@ server <- function(input, output, session) {
                       filter(!is.na(census_tract)) %>%
                       select(count) %>%
                       unlist %>%
-                      max) 
+                      max)
         bins <- max(min(max(domain)-min(domain), 8), 2)
       } else {
         domain <- c(0, selected_service_code_data %>%
@@ -116,7 +129,7 @@ server <- function(input, output, session) {
              domain = domain,
              bins = bins)
   }
-  
+
   update_polygons <- function(map_id,
                               map_data,
                               palette) {
@@ -134,7 +147,7 @@ server <- function(input, output, session) {
         highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = TRUE)
       )
   }
-  
+
   update_legend <- function(map_id,
                             selected_service_code_data,
                             palette,
@@ -156,12 +169,12 @@ server <- function(input, output, session) {
           } else {
             paste0(prefix, formatNum(cuts[-n]),
                    ifelse(cuts[-1]-1>cuts[-n], paste0(between, formatNum(cuts[-1]-1)), ""),
-                   suffix) 
+                   suffix)
           }
         }
       }
     }
-    
+
     leafletProxy(map_id) %>%
       clearControls() %>%
       addLegend("bottomleft", pal = palette,
@@ -188,23 +201,23 @@ server <- function(input, output, session) {
       p
     }
   }
-  
+
   #####
   # 'Explore' tab
   #
-  
+
   # Data for selected service code
   explore_selected_service_code_data = reactive({
     get_selected_service_code_data(input$explore_selected_service_code)
   })
-  
+
   # Geographic data with the number of requests for the selected service code mapped to census tract
   explore_map_data <- reactive({
     get_map_data(explore_selected_service_code_data(),
                  input$explore_selected_time_aggregation_value,
                  input$explore_normalize_by_total_requests)
   })
-  
+
   # Data for the time series chart of requests for the selected service code
   explore_time_series_data <- reactive({
     explore_selected_service_code_data() %>%
@@ -213,27 +226,27 @@ server <- function(input, output, session) {
                 total_requests = sum(total_requests)) %>%
       mutate(is_selected = ifelse(time_aggregation_value == input$explore_selected_time_aggregation_value, TRUE, FALSE))
     })
-  
+
   # Initialize map
   output$explore_map <- renderLeaflet({
     leaflet() %>%
       setView(lng = -77.0369, lat = 38.9072, zoom = 12) %>% # Center on DC
       addProviderTiles("CartoDB.PositronNoLabels")
   })
-  
+
   # Color palette that is updated to match the range of values for the selected service code
   explore_palette <- reactive({
     get_palette(explore_selected_service_code_data(),
                 input$explore_normalize_by_total_requests)
   })
-  
+
   # Update polygons when service code or month/week is changed
   observe({
     update_polygons("explore_map",
                     explore_map_data(),
                     explore_palette())
   })
-  
+
   # Update legend when service code is changed
   observe({
     update_legend("explore_map",
@@ -244,62 +257,143 @@ server <- function(input, output, session) {
 
   # Update time series chart
   output$explore_request_count_time_series_plot <- renderPlot({
-    update_request_time_series_plot(explore_time_series_data(), 
+    update_request_time_series_plot(explore_time_series_data(),
                                     input$explore_normalize_by_total_requests)
   })
-  
+
 
 
   #####
   # 'Compare' tab
   #
-  
+
   #### Data for selected service code ####
   # left panel
   compare_selected_service_code_data_left = reactive({
     get_selected_service_code_data(input$compare_selected_service_code_left)
   })
-  
+
   # right panel
   compare_selected_service_code_data_right = reactive({
     get_selected_service_code_data(input$compare_selected_service_code_right)
   })
-  
+
+  # single panel
+  compare_selected_service_code_data_single = reactive({
+    get_selected_service_code_data(input$compare_selected_service_code_single)
+  })
+
   #### Geographic data with the number of requests for the selected service code mapped to census tract ####
   # left panel
+
   compare_map_data_left <- reactive({
-    get_map_data(compare_selected_service_code_data_left(),
-                 input$compare_selected_time_aggregation_value,
-                 input$compare_normalize_by_total_requests)
+
+    if (input$single_service==TRUE && input$single_time==TRUE){
+
+      get_map_data(compare_selected_service_code_data_single(),
+                   input$compare_selected_time_aggregation_value_single,
+                   input$compare_normalize_by_total_requests)
+    } else if (input$single_service==TRUE && input$single_time==FALSE){
+      get_map_data(compare_selected_service_code_data_single(),
+                   input$compare_selected_time_aggregation_value_left,
+                   input$compare_normalize_by_total_requests)
+    } else if (input$single_service==FALSE && input$single_time==TRUE){
+      get_map_data(compare_selected_service_code_data_left(),
+                   input$compare_selected_time_aggregation_value_single,
+                   input$compare_normalize_by_total_requests)
+    } else {
+      get_map_data(compare_selected_service_code_data_left(),
+                   input$compare_selected_time_aggregation_value_left,
+                   input$compare_normalize_by_total_requests)
+    }
+
+
   })
-  
+
   # right panel
   compare_map_data_right <- reactive({
-    get_map_data(compare_selected_service_code_data_right(),
-                 input$compare_selected_time_aggregation_value,
-                 input$compare_normalize_by_total_requests)
+     if (input$single_service==TRUE && input$single_time==TRUE){
+
+       get_map_data(compare_selected_service_code_data_single(),
+                    input$compare_selected_time_aggregation_value_single,
+                    input$compare_normalize_by_total_requests)
+     } else if (input$single_service==TRUE && input$single_time==FALSE){
+       get_map_data(compare_selected_service_code_data_single(),
+                    input$compare_selected_time_aggregation_value_right,
+                    input$compare_normalize_by_total_requests)
+     } else if (input$single_service==FALSE && input$single_time==TRUE){
+       get_map_data(compare_selected_service_code_data_right(),
+                    input$compare_selected_time_aggregation_value_single,
+                    input$compare_normalize_by_total_requests)
+     } else {
+       get_map_data(compare_selected_service_code_data_right(),
+                    input$compare_selected_time_aggregation_value_right,
+                    input$compare_normalize_by_total_requests)
+     }
   })
-  
+
 
   #### Data for the time series chart of requests for the selected service code ####
   # left panel
   compare_time_series_data_left <- reactive({
-    compare_selected_service_code_data_left() %>%
-      group_by(time_aggregation_value) %>%
-      summarize(count = sum(count),
-                total_requests = sum(total_requests)) %>%
-      mutate(is_selected = ifelse(time_aggregation_value == input$compare_selected_time_aggregation_value, TRUE, FALSE))
+    if (input$single_service==TRUE && input$single_time==TRUE){
+
+      compare_selected_service_code_data_single() %>%
+        group_by(time_aggregation_value) %>%
+        summarize(count = sum(count),
+                  total_requests = sum(total_requests)) %>%
+        mutate(is_selected = ifelse(time_aggregation_value == input$compare_selected_time_aggregation_value_single, TRUE, FALSE))
+    } else if (input$single_service==TRUE && input$single_time==FALSE){
+      compare_selected_service_code_data_single() %>%
+        group_by(time_aggregation_value) %>%
+        summarize(count = sum(count),
+                  total_requests = sum(total_requests)) %>%
+        mutate(is_selected = ifelse(time_aggregation_value == input$compare_selected_time_aggregation_value_left, TRUE, FALSE))
+    } else if (input$single_service==FALSE && input$single_time==TRUE){
+      compare_selected_service_code_data_left() %>%
+        group_by(time_aggregation_value) %>%
+        summarize(count = sum(count),
+                  total_requests = sum(total_requests)) %>%
+        mutate(is_selected = ifelse(time_aggregation_value == input$compare_selected_time_aggregation_value_single, TRUE, FALSE))
+    } else {
+      compare_selected_service_code_data_left() %>%
+        group_by(time_aggregation_value) %>%
+        summarize(count = sum(count),
+                  total_requests = sum(total_requests)) %>%
+        mutate(is_selected = ifelse(time_aggregation_value == input$compare_selected_time_aggregation_value_left, TRUE, FALSE))
+    }
   })
-  
+
   # right panel
   compare_time_series_data_right <- reactive({
-    compare_selected_service_code_data_right() %>%
-      group_by(time_aggregation_value) %>%
-      summarize(count = sum(count),
-                total_requests = sum(total_requests)) %>%
-      mutate(is_selected = ifelse(time_aggregation_value == input$compare_selected_time_aggregation_value, TRUE, FALSE))
+      if (input$single_service==TRUE && input$single_time==TRUE){
+
+        compare_selected_service_code_data_single() %>%
+          group_by(time_aggregation_value) %>%
+          summarize(count = sum(count),
+                    total_requests = sum(total_requests)) %>%
+          mutate(is_selected = ifelse(time_aggregation_value == input$compare_selected_time_aggregation_value_single, TRUE, FALSE))
+      } else if (input$single_service==TRUE && input$single_time==FALSE){
+        compare_selected_service_code_data_single() %>%
+          group_by(time_aggregation_value) %>%
+          summarize(count = sum(count),
+                    total_requests = sum(total_requests)) %>%
+          mutate(is_selected = ifelse(time_aggregation_value == input$compare_selected_time_aggregation_value_right, TRUE, FALSE))
+      } else if (input$single_service==FALSE && input$single_time==TRUE){
+        compare_selected_service_code_data_right() %>%
+          group_by(time_aggregation_value) %>%
+          summarize(count = sum(count),
+                    total_requests = sum(total_requests)) %>%
+          mutate(is_selected = ifelse(time_aggregation_value == input$compare_selected_time_aggregation_value_single, TRUE, FALSE))
+      } else {
+        compare_selected_service_code_data_right() %>%
+          group_by(time_aggregation_value) %>%
+          summarize(count = sum(count),
+                    total_requests = sum(total_requests)) %>%
+          mutate(is_selected = ifelse(time_aggregation_value == input$compare_selected_time_aggregation_value_right, TRUE, FALSE))
+      }
   })
-  
+
   #### Initialize maps ####
   # left panel
   output$compare_leftmap <- renderLeaflet({
@@ -307,42 +401,56 @@ server <- function(input, output, session) {
       setView(lng = -77.0369, lat = 38.9072, zoom = 11) %>%
       addProviderTiles("CartoDB.PositronNoLabels")
   })
-  
+
   # right panel
   output$compare_rightmap <- renderLeaflet({
     leaflet() %>%
       setView(lng = -77.0369, lat = 38.9072, zoom = 11) %>%
       addProviderTiles("CartoDB.PositronNoLabels")
   })
-  
+
   #### Color palette that is updated to match the range of values for the selected service code ####
   # left legend
   compare_palette_left <- reactive({
-    get_palette(compare_selected_service_code_data_left(),
-                input$compare_normalize_by_total_requests)
+    if (input$single_service==TRUE){
+      get_palette(compare_selected_service_code_data_single(),
+                  input$compare_normalize_by_total_requests)
+    } else {
+      get_palette(compare_selected_service_code_data_left(),
+                  input$compare_normalize_by_total_requests)
+    }
   })
-  
+
   # right legend
   compare_palette_right <- reactive({
-    get_palette(compare_selected_service_code_data_right(),
-                input$compare_normalize_by_total_requests)
+    if (input$single_service==TRUE){
+      get_palette(compare_selected_service_code_data_single(),
+                  input$compare_normalize_by_total_requests)
+    } else {
+      get_palette(compare_selected_service_code_data_right(),
+                  input$compare_normalize_by_total_requests)
+    }
   })
-  
+
+
   #### Update polygons when service code or month/week is changed ####
+
   # left
   observe({
-    update_polygons("compare_leftmap",
-                    compare_map_data_left(),
-                    compare_palette_left())
+      update_polygons("compare_leftmap",
+                      compare_map_data_left(),
+                      compare_palette_left())
   })
-  
+
   # right
   observe({
-    update_polygons("compare_rightmap",
-                    compare_map_data_right(),
-                    compare_palette_right())
+      update_polygons("compare_rightmap",
+                      compare_map_data_right(),
+                      compare_palette_right())
+
+
   })
-  
+
   #### Update legend when service code is changed ####
   # left
   observe({
@@ -351,7 +459,7 @@ server <- function(input, output, session) {
                   compare_palette_left(),
                   input$compare_normalize_by_total_requests)
   })
-  
+
   # right
   observe({
     update_legend("compare_rightmap",
@@ -363,13 +471,13 @@ server <- function(input, output, session) {
   #### Update time series chart ####
   # left
   output$compare_request_count_time_series_plot_left <- renderPlot({
-    update_request_time_series_plot(compare_time_series_data_left(), 
+    update_request_time_series_plot(compare_time_series_data_left(),
                                     input$compare_normalize_by_total_requests)
   })
 
   # right
   output$compare_request_count_time_series_plot_right <- renderPlot({
-    update_request_time_series_plot(compare_time_series_data_right(), 
+    update_request_time_series_plot(compare_time_series_data_right(),
                                     input$compare_normalize_by_total_requests)
   })
 
@@ -388,7 +496,7 @@ server <- function(input, output, session) {
     tags$hr(),
     h4("Maintainers"),
     p("Elizabeth Lee -- 'eclee25' at 'gmail' dot 'com'"),
-    p("Jason Asher -- 'jason.m.asher' at 'gmail' dot 'com'"),    
+    p("Jason Asher -- 'jason.m.asher' at 'gmail' dot 'com'"),
     tags$hr()
     )
   })
