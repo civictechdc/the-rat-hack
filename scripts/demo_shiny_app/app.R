@@ -12,6 +12,7 @@ load("./data/demo_shiny_app_data.RData")
 TOTAL_REQUESTS_SERVICE_CODE <- "XXtotal_requestsXX" # Special key for artificially inserting 'Total Requests'
 
 ui <- navbarPage(title = "DC 311 Portal",
+                 id="tabs",
                  tabPanel("Explore",
                           tags$style(type = "text/css", "#explore_map {height: calc(100vh - 80px) !important;}
                                      #explore_controls {opacity: 0.85; padding: 10px}
@@ -62,14 +63,15 @@ ui <- navbarPage(title = "DC 311 Portal",
 
 
                               checkboxInput("compare_normalize_by_total_requests", "Normalize by Total Requests", FALSE)
+
                             ),
                             column(4,
                               plotOutput("compare_request_count_time_series_plot_left", height = 200, width = 300),
                               plotOutput("compare_request_count_time_series_plot_right", height = 200, width = 300)
                             )
                           )
-                          ),
-                 tabPanel("Description", uiOutput("description"))
+                        ),
+                   tabPanel("Description", uiOutput("description"))
                  )
 
 server <- function(input, output, session) {
@@ -333,6 +335,7 @@ server <- function(input, output, session) {
   })
 
 
+
   #### Data for the time series chart of requests for the selected service code ####
   # left panel
   compare_time_series_data_left <- reactive({
@@ -432,41 +435,35 @@ server <- function(input, output, session) {
     }
   })
 
-
-  #### Update polygons when service code or month/week is changed ####
-
-  # left
   observe({
-      update_polygons("compare_leftmap",
-                      compare_map_data_left(),
-                      compare_palette_left())
-  })
+    if (identical(input$tabs, "Compare")) {
 
-  # right
-  observe({
-      update_polygons("compare_rightmap",
-                      compare_map_data_right(),
-                      compare_palette_right())
+    #### Update polygons when service code or month/week is changed ####
+    # left
 
+    update_polygons("compare_leftmap",
+                    compare_map_data_left(),
+                    compare_palette_left())
 
-  })
+    # right
+    update_polygons("compare_rightmap",
+                    compare_map_data_right(),
+                    compare_palette_right())
 
-  #### Update legend when service code is changed ####
-  # left
-  observe({
+    #### Update legend when service code is changed ####
+
     update_legend("compare_leftmap",
                   compare_selected_service_code_data_left(),
                   compare_palette_left(),
                   input$compare_normalize_by_total_requests)
-  })
 
-  # right
-  observe({
     update_legend("compare_rightmap",
                   compare_selected_service_code_data_right(),
                   compare_palette_right(),
                   input$compare_normalize_by_total_requests)
+    }
   })
+
 
   #### Update time series chart ####
   # left
@@ -480,7 +477,6 @@ server <- function(input, output, session) {
     update_request_time_series_plot(compare_time_series_data_right(),
                                     input$compare_normalize_by_total_requests)
   })
-
 
   #####
   # 'Description' tab
