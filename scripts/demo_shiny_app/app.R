@@ -62,7 +62,7 @@ ui <- navbarPage(title = "DC 311 Portal",
                                ),
 
 
-                              checkboxInput("compare_normalize_by_total_requests", "Normalize by Total Requests", FALSE)
+                              checkboxInput("compare_normalize_by_total_requests", "Display as Percent of Total Requests", FALSE)
 
                             ),
                             column(4,
