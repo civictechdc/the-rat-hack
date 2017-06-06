@@ -7,12 +7,12 @@ This is the Code for DC rats project. We are exploring data on rodent abatement 
 Start by forking the repository, and then cloning the forked version of the repository to your computer. We use a triangular workflow - you should push to your fork, but fetch/pull from the Code for DC repo. Setting this up is easy. Use these commands:
 ```
 $ git clone <url-of-your-fork>
-$ cd housing-insights
-$ git remote add codefordc https://github.com/codefordc/housing-insights.git
+$ cd the-rat-hack
+$ git remote add codefordc https://github.com/eclee25/the-rat-hack.git
 $ git remote -v
   #you should see this:
-  codefordc       https://github.com/codefordc/housing-preservation.git (fetch)
-  codefordc       https://github.com/codefordc/housing-preservation.git (push)
+  codefordc       https://github.com/eclee25/the-rat-hack.git (fetch)
+  codefordc       https://github.com/eclee25/the-rat-hack.git (push)
   origin          <your/forked/url> (push)
   origin          <your/forked/url> (fetch)
 ```
