@@ -20,6 +20,7 @@ ui <- navbarPage(title = "DC 311 Portal",
                                      #explore_controls:hover {opacity: 1.0}"), # Setting map height this way (CSS3) to fill screen in the tab panel
                           leafletOutput("explore_map", width = "100%", height = "100%"),
                           absolutePanel(id = "explore_controls", class = "panel panel-default", top = 60, right = 20,
+                                        actionButton("center_explore_map", "Center map"),
                                         selectInput("explore_selected_service_code", "Service Request Type",
                                                     setNames(c(TOTAL_REQUESTS_SERVICE_CODE, service_codes_and_descriptions$service_code),
                                                              c("Total Requests", service_codes_and_descriptions$service_code_description))),
@@ -40,6 +41,7 @@ ui <- navbarPage(title = "DC 311 Portal",
                           leafletOutput("compare_rightmap", width = "50%", height = "auto"),
                           fluidRow(id = "compare_controls",
                             column(4,
+                              actionButton("center_compare_maps", "Center maps"),
                               checkboxInput("single_service", "Single Service Request", FALSE),
                               checkboxInput("single_time", "Single Time Frame", FALSE),
                               conditionalPanel( condition = "input.single_service == true",
@@ -250,6 +252,13 @@ server <- function(input, output, session) {
                     explore_palette())
   })
 
+  # center map function
+
+  observeEvent(input$center_explore_map, {
+    leafletProxy("explore_map") %>%
+      setView(lng = -77.0369, lat = 38.9072, zoom = 12)
+  })
+
   # Update legend when service code is changed
   observe({
     update_legend("explore_map",
@@ -270,11 +279,20 @@ server <- function(input, output, session) {
   # 'Compare' tab
   #
 
+  # Function to center both maps
+  observeEvent(input$center_compare_maps, {
+    leafletProxy("compare_leftmap") %>%
+      setView(lng = -77.0369, lat = 38.9072, zoom = 11)
+    leafletProxy("compare_rightmap") %>%
+      setView(lng = -77.0369, lat = 38.9072, zoom = 11)
+  })
+
   #### Data for selected service code ####
   # left panel
   compare_selected_service_code_data_left = reactive({
     get_selected_service_code_data(input$compare_selected_service_code_left)
   })
+
 
   # right panel
   compare_selected_service_code_data_right = reactive({
