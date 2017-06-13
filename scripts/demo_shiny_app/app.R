@@ -12,6 +12,7 @@ load("./data/demo_shiny_app_data.RData")
 TOTAL_REQUESTS_SERVICE_CODE <- "XXtotal_requestsXX" # Special key for artificially inserting 'Total Requests'
 
 ui <- navbarPage(title = "DC 311 Portal",
+                 header = tags$head(includeScript("google_analytics.js")),
                  id="tabs",
                  tabPanel("Explore",
                           tags$style(type = "text/css", "#explore_map {height: calc(100vh - 80px) !important;}
