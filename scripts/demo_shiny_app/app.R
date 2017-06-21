@@ -30,7 +30,8 @@ ui <- navbarPage(title = "DC 311 Portal",
                                                     max(summarized_data$time_aggregation_value),
                                                     value = min(summarized_data$time_aggregation_value),
                                                     step = 1),
-                                        plotOutput("explore_request_count_time_series_plot", height = 200))
+                                        plotOutput("explore_request_count_time_series_plot", height = 200),
+                                        actionButton("center_explore_map", "Center map"))
                           ),
                  tabPanel("Compare",
                            tags$head(
@@ -69,6 +70,9 @@ ui <- navbarPage(title = "DC 311 Portal",
                             column(4,
                               plotOutput("compare_request_count_time_series_plot_left", height = 200, width = 300),
                               plotOutput("compare_request_count_time_series_plot_right", height = 200, width = 300)
+                            ),
+                            column(4,
+                                   actionButton("center_compare_maps", "Center maps")
                             )
                           )
                         ),
@@ -250,6 +254,13 @@ server <- function(input, output, session) {
                     explore_palette())
   })
 
+  # center map function
+
+  observeEvent(input$center_explore_map, {
+    leafletProxy("explore_map") %>%
+      setView(lng = -77.0369, lat = 38.9072, zoom = 12)
+  })
+
   # Update legend when service code is changed
   observe({
     update_legend("explore_map",
@@ -270,11 +281,20 @@ server <- function(input, output, session) {
   # 'Compare' tab
   #
 
+  # Function to center both maps
+  observeEvent(input$center_compare_maps, {
+    leafletProxy("compare_leftmap") %>%
+      setView(lng = -77.0369, lat = 38.9072, zoom = 11)
+    leafletProxy("compare_rightmap") %>%
+      setView(lng = -77.0369, lat = 38.9072, zoom = 11)
+  })
+
   #### Data for selected service code ####
   # left panel
   compare_selected_service_code_data_left = reactive({
     get_selected_service_code_data(input$compare_selected_service_code_left)
   })
+
 
   # right panel
   compare_selected_service_code_data_right = reactive({
