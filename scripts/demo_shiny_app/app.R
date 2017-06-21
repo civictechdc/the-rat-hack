@@ -12,12 +12,13 @@ load("./data/demo_shiny_app_data.RData")
 TOTAL_REQUESTS_SERVICE_CODE <- "XXtotal_requestsXX" # Special key for artificially inserting 'Total Requests'
 
 ui <- navbarPage(title = "DC 311 Portal",
-                 header = tags$head(includeScript("google_analytics.js")),
+                 header = tags$head(includeScript("google_analytics.js"),
+                                    includeScript("prettify_slider.js")),
                  id="tabs",
                  tabPanel("Explore",
-                          tags$style(type = "text/css", "#explore_map {height: calc(100vh - 80px) !important;}
-                                     #explore_controls {opacity: 0.85; padding: 10px}
-                                     #explore_controls:hover {opacity: 1.0}"), # Setting map height this way (CSS3) to fill screen in the tab panel
+                         tags$head(
+                           tags$link(rel = "stylesheet", type = "text/css", href = "styles.css")
+                           ),
                           leafletOutput("explore_map", width = "100%", height = "100%"),
                           absolutePanel(id = "explore_controls", class = "panel panel-default", top = 60, right = 20,
                                         actionButton("center_explore_map", "Center map"),
@@ -33,10 +34,9 @@ ui <- navbarPage(title = "DC 311 Portal",
                                         plotOutput("explore_request_count_time_series_plot", height = 200))
                           ),
                  tabPanel("Compare",
-                          tags$style(type = "text/css",
-                                    "#compare_leftmap {height: calc(100vh - 360px) !important; float: left}
-                                     #compare_rightmap {height: calc(100vh - 360px) !important; float: left}
-                                     #compare_controls {padding: 10px; margin:auto}"), # Setting map height this way (CSS3) to fill screen in the tab panel,
+                           tags$head(
+                             tags$link(rel = "stylesheet", type = "text/css", href = "styles.css")
+                             ),
                           leafletOutput("compare_leftmap", width = "50%", height = "auto"),
                           leafletOutput("compare_rightmap", width = "50%", height = "auto"),
                           fluidRow(id = "compare_controls",
