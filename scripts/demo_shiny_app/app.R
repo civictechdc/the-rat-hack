@@ -21,7 +21,6 @@ ui <- navbarPage(title = "DC 311 Portal",
                            ),
                           leafletOutput("explore_map", width = "100%", height = "100%"),
                           absolutePanel(id = "explore_controls", class = "panel panel-default", top = 60, right = 20,
-                                        actionButton("center_explore_map", "Center map"),
                                         selectInput("explore_selected_service_code", "Service Request Type",
                                                     setNames(c(TOTAL_REQUESTS_SERVICE_CODE, service_codes_and_descriptions$service_code),
                                                              c("Total Requests", service_codes_and_descriptions$service_code_description))),
@@ -31,7 +30,8 @@ ui <- navbarPage(title = "DC 311 Portal",
                                                     max(summarized_data$time_aggregation_value),
                                                     value = min(summarized_data$time_aggregation_value),
                                                     step = 1),
-                                        plotOutput("explore_request_count_time_series_plot", height = 200))
+                                        plotOutput("explore_request_count_time_series_plot", height = 200),
+                                        actionButton("center_explore_map", "Center map"))
                           ),
                  tabPanel("Compare",
                            tags$head(
@@ -41,7 +41,6 @@ ui <- navbarPage(title = "DC 311 Portal",
                           leafletOutput("compare_rightmap", width = "50%", height = "auto"),
                           fluidRow(id = "compare_controls",
                             column(4,
-                              actionButton("center_compare_maps", "Center maps"),
                               checkboxInput("single_service", "Single Service Request", FALSE),
                               checkboxInput("single_time", "Single Time Frame", FALSE),
                               conditionalPanel( condition = "input.single_service == true",
@@ -71,6 +70,9 @@ ui <- navbarPage(title = "DC 311 Portal",
                             column(4,
                               plotOutput("compare_request_count_time_series_plot_left", height = 200, width = 300),
                               plotOutput("compare_request_count_time_series_plot_right", height = 200, width = 300)
+                            ),
+                            column(4,
+                                   actionButton("center_compare_maps", "Center maps")
                             )
                           )
                         ),
