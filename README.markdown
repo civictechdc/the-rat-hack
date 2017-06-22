@@ -7,10 +7,11 @@ This is the Code for DC rats project. We are exploring data on rodent abatement 
 ### Getting Started
 **Check out our live [311 Data Portal](http://dc311portal.codefordc.org/)**
 
+Clone our project or get started with some starter code as a newbie on our [Github project page](https://github.com/eclee25/the-rat-hack).
+
 Download our clean [311 Data](https://www.dropbox.com/sh/4j7q53lltasez3h/AACTJgmlkmKE9zlPp1ndYu9Va?dl=0)
 
 Take a look at the ongoing project tasks on our [Trello Board](https://trello.com/b/1u5zLyEJ/code-for-dc-rats)
-
 
 ### Other resources
 Check out the "rats" channel on the [Code for DC slack!](https://codefordc.org/joinslack)
