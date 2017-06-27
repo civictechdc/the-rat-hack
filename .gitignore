@@ -1,4 +1,5 @@
 gh-pages/
 scripts/demo_shiny_app/.Rhistory
-.httr-oauth
+scripts/demo_shiny_app/data/demo_shiny_app_data.Rdata
 
+.httr-oauth
