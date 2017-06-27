@@ -426,8 +426,6 @@ server <- function(input, output, session) {
     addProviderTiles("CartoDB.PositronNoLabels")%>%
     htmlwidgets::onRender("
       function(el, x) {
-        console.log('damn')
-        var myMap = this;
         map1 = this;
       }")
 
@@ -436,13 +434,9 @@ server <- function(input, output, session) {
     addProviderTiles("CartoDB.PositronNoLabels")%>%
     htmlwidgets::onRender("
       function(el, x) {
-        console.log('damn')
         map2 = this;
         map1.sync(map2)
         map2.sync(map1)
-
-        console.log(map1)
-        console.log(map2)
       }")
 
   output$compare_leftmap <- renderLeaflet({

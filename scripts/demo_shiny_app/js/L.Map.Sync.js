@@ -136,13 +136,15 @@
                         // The event viewpreresets does an invalidateAll,
                         // that reloads all the tiles.
                         // That causes an annoying flicker.
-                        viewpreresets = this._events.viewprereset;
-                        this._events.viewprereset = [];
+
+                        // disabling due to leaflet sync
+                        // viewpreresets = this._events.viewprereset;
+                        // this._events.viewprereset = [];
                     }
                     var ret = L.Map.prototype.setView.call(this, center, zoom, options);
                     if (options && options.disableViewprereset) {
                         // restore viewpreresets event to its previous values
-                        this._events.viewprereset = viewpreresets;
+                        // this._events.viewprereset = viewpreresets;
                     }
                     return ret;
                 },
