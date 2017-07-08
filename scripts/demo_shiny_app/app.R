@@ -12,11 +12,13 @@ load("./data/demo_shiny_app_data.RData")
 TOTAL_REQUESTS_SERVICE_CODE <- "XXtotal_requestsXX" # Special key for artificially inserting 'Total Requests'
 
 ui <- navbarPage(title = "DC 311 Portal",
+                 header = tags$head(includeScript("google_analytics.js"),
+                                    includeScript("prettify_slider.js")),
                  id="tabs",
                  tabPanel("Explore",
-                          tags$style(type = "text/css", "#explore_map {height: calc(100vh - 80px) !important;}
-                                     #explore_controls {opacity: 0.85; padding: 10px}
-                                     #explore_controls:hover {opacity: 1.0}"), # Setting map height this way (CSS3) to fill screen in the tab panel
+                         tags$head(
+                           tags$link(rel = "stylesheet", type = "text/css", href = "styles.css")
+                           ),
                           leafletOutput("explore_map", width = "100%", height = "100%"),
                           absolutePanel(id = "explore_controls", class = "panel panel-default", top = 60, right = 20,
                                         selectInput("explore_selected_service_code", "Service Request Type",
@@ -28,13 +30,13 @@ ui <- navbarPage(title = "DC 311 Portal",
                                                     max(summarized_data$time_aggregation_value),
                                                     value = min(summarized_data$time_aggregation_value),
                                                     step = 1),
-                                        plotOutput("explore_request_count_time_series_plot", height = 200))
+                                        plotOutput("explore_request_count_time_series_plot", height = 200),
+                                        actionButton("center_explore_map", "Center map"))
                           ),
                  tabPanel("Compare",
-                          tags$style(type = "text/css",
-                                    "#compare_leftmap {height: calc(100vh - 360px) !important; float: left}
-                                     #compare_rightmap {height: calc(100vh - 360px) !important; float: left}
-                                     #compare_controls {padding: 10px; margin:auto}"), # Setting map height this way (CSS3) to fill screen in the tab panel,
+                           tags$head(
+                             tags$link(rel = "stylesheet", type = "text/css", href = "styles.css")
+                             ),
                           leafletOutput("compare_leftmap", width = "50%", height = "auto"),
                           leafletOutput("compare_rightmap", width = "50%", height = "auto"),
                           fluidRow(id = "compare_controls",
@@ -68,6 +70,9 @@ ui <- navbarPage(title = "DC 311 Portal",
                             column(4,
                               plotOutput("compare_request_count_time_series_plot_left", height = 200, width = 300),
                               plotOutput("compare_request_count_time_series_plot_right", height = 200, width = 300)
+                            ),
+                            column(4,
+                                   actionButton("center_compare_maps", "Center maps")
                             )
                           )
                         ),
@@ -249,6 +254,13 @@ server <- function(input, output, session) {
                     explore_palette())
   })
 
+  # center map function
+
+  observeEvent(input$center_explore_map, {
+    leafletProxy("explore_map") %>%
+      setView(lng = -77.0369, lat = 38.9072, zoom = 12)
+  })
+
   # Update legend when service code is changed
   observe({
     update_legend("explore_map",
@@ -269,11 +281,20 @@ server <- function(input, output, session) {
   # 'Compare' tab
   #
 
+  # Function to center both maps
+  observeEvent(input$center_compare_maps, {
+    leafletProxy("compare_leftmap") %>%
+      setView(lng = -77.0369, lat = 38.9072, zoom = 11)
+    leafletProxy("compare_rightmap") %>%
+      setView(lng = -77.0369, lat = 38.9072, zoom = 11)
+  })
+
   #### Data for selected service code ####
   # left panel
   compare_selected_service_code_data_left = reactive({
     get_selected_service_code_data(input$compare_selected_service_code_left)
   })
+
 
   # right panel
   compare_selected_service_code_data_right = reactive({
