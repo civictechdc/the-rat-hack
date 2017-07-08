@@ -1,4 +1,6 @@
 gh-pages/
 scripts/demo_shiny_app/.Rhistory
 .httr-oauth
+*.csv
+*.xlsx
 
