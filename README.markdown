@@ -10,15 +10,15 @@ We have rolled some starting R code and 311 data into a virtual image that can b
 * [download for Mac](https://www.docker.com/docker-mac) ([additional installation instructions](https://docs.docker.com/docker-for-mac/))
 * [follow instructions for installation in Ubuntu](https://docs.docker.com/engine/installation/linux/ubuntu/)
 
-2. Next, pull the Docker image for our project from Code for DC's Docker Hub. Open a Terminal or shell and use the following command (Note that you will need to enter your administrator/sudo password into the command line after executing the command):
+2. Next, run the Docker image for our project from Code for DC's Docker Hub. Open a Terminal or shell and use the following command (Note that you will need to enter your administrator/sudo password into the command line after executing the command):
 ```
-$ sudo docker pull codefordc2/explore-311-data-in-r
+$ sudo docker run -d -p 878:8787 codefordc2/explore-311-data-in-r
 ```
 If you were unable to pull the Docker image from Docker Hub, try downloading the Docker image for our project, called "RStudio Server Demo.zip" from this [Dropbox folder](https://www.dropbox.com/sh/z25tdp9w0ovb6ug/AAA0nIWUbXEzqmwHo8mRqZTRa?dl=0). Then, build the Docker image with the following command:
 ```
 $ sudo docker build -t codefordc2/explore-311-data-in-r .
 ```
-3. Next, launch the server with the following command:
+Next, launch the server with the following command:
 ```
 $ sudo docker run -d -p 8787:8787 codefordc2/explore-311-data-in-r
 ```
