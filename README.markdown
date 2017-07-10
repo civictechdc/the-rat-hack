@@ -5,12 +5,12 @@ This is the Code for DC rats project. We are exploring data on rodent abatement 
 ## Getting started with R and the 311 data (for newbies)
 We have rolled some starting R code and 311 data into a virtual image that can be accessed using a software called Docker. This allows users to run and modify R code that explores the 2016 311 data without needing to install R and script-dependent R packages.
 
-Get started by installing the free Docker Community Edition for your operating system:
+1. Get started by installing the free Docker Community Edition for your operating system:
 * [download for Windows 10 Professional](https://docs.docker.com/docker-for-windows/) ([additional installation instructions](https://docs.docker.com/docker-for-windows/)) 
 * [download for Mac](https://www.docker.com/docker-mac) ([additional installation instructions](https://docs.docker.com/docker-for-mac/))
 * [follow instructions for installation in Ubuntu](https://docs.docker.com/engine/installation/linux/ubuntu/)
 
-Next, pull the Docker image for our project from Code for DC's Docker Hub. Open a Terminal or shell and use the following command:
+2. Next, pull the Docker image for our project from Code for DC's Docker Hub. Open a Terminal or shell and use the following command (Note that you will need to enter your administrator/sudo password into the command line after executing the command):
 ```
 $ sudo docker pull codefordc2/explore-311-data-in-r
 ```
@@ -18,11 +18,11 @@ If you were unable to pull the Docker image from Docker Hub, try downloading the
 ```
 $ sudo docker build -t codefordc2/explore-311-data-in-r .
 ```
-Note that you will need to enter your administrator/sudo password into the command line after executing the command. Next, launch the server with the following command:
+3. Next, launch the server with the following command:
 ```
 $ sudo docker run -d -p 8787:8787 codefordc2/explore-311-data-in-r
 ```
-Finally, navigate to localhost:8787 in your favorite browser by pasting "localhost:8787" into the URL bar. If prompted to log in to the RStudio instance, the username and password are both 'rstudio'. You should now see a running version of RStudio with scripts and data related to the 311 data. Now you can run the scripts, view figures, and edit the code in the browser as if you had RStudio running locally on your computer.
+4. Finally, navigate to localhost:8787 in your favorite browser by pasting "localhost:8787" into the URL bar. If prompted to log in to the RStudio instance, the username and password are both 'rstudio'. You should now see a running version of RStudio with scripts and data related to the 311 data. Now you can run the scripts, view figures, and edit the code in the browser as if you had RStudio running locally on your computer.
 
 
 ## Getting started with our Github project (for contributors)
