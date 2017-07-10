@@ -10,15 +10,17 @@ Get started by installing the free Docker Community Edition for your operating s
 * [download for Mac](https://www.docker.com/docker-mac) ([additional installation instructions](https://docs.docker.com/docker-for-mac/))
 * [follow instructions for installation in Ubuntu](https://docs.docker.com/engine/installation/linux/ubuntu/)
 
-Next, download the Docker image for our project, called "RStudio Server Demo.zip" from this [Dropbox folder](https://www.dropbox.com/sh/z25tdp9w0ovb6ug/AAA0nIWUbXEzqmwHo8mRqZTRa?dl=0). 
-
-Then, open a Terminal or shell in order to build the Docker image with the following command:
+Next, pull the Docker image for our project from Code for DC's Docker Hub. Open a Terminal or shell and use the following command:
 ```
-$ sudo docker build -t codefordc/rstudio .
+$ sudo docker pull codefordc2/explore-311-data-in-r
+```
+If you were unable to pull the Docker image from Docker Hub, try downloading the Docker image for our project, called "RStudio Server Demo.zip" from this [Dropbox folder](https://www.dropbox.com/sh/z25tdp9w0ovb6ug/AAA0nIWUbXEzqmwHo8mRqZTRa?dl=0). Then, build the Docker image with the following command:
+```
+$ sudo docker build -t codefordc2/explore-311-data-in-r .
 ```
 Note that you will need to enter your administrator/sudo password into the command line after executing the command. Next, launch the server with the following command:
 ```
-$ sudo docker run -d -p 8787:8787 codefordc/rstudio
+$ sudo docker run -d -p 8787:8787 codefordc2/explore-311-data-in-r
 ```
 Finally, navigate to localhost:8787 in your favorite browser by pasting "localhost:8787" into the URL bar. If prompted to log in to the RStudio instance, the username and password are both 'rstudio'. You should now see a running version of RStudio with scripts and data related to the 311 data. Now you can run the scripts, view figures, and edit the code in the browser as if you had RStudio running locally on your computer.
 
