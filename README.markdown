@@ -3,10 +3,10 @@
 This is the Code for DC rats project. We are exploring data on rodent abatement complaints submitted to DC 311. The short-term goal is to visualize historical data on 311 calls and search for simple correlations with potential mechanisms for rat complaints. The long-term goal is to develop a model that can predict clusters of 311 rodent complaints in time and space, as an informative tool for city managers.
 
 ## Quick Links
-Check out the "rats" channel on the [Code for DC slack!](https://codefordc.org/joinslack)
-Access our prototype of the 311 data portal [here](http://dc311portal.codefordc.org/)
-Download the 311 data from Dropbox [here](https://www.dropbox.com/sh/4j7q53lltasez3h/AACTJgmlkmKE9zlPp1ndYu9Va?dl=0)
-View our open issues on Trello [here](https://trello.com/b/1u5zLyEJ/code-for-dc-rats)
+* Check out the "rats" channel on the [Code for DC slack!](https://codefordc.org/joinslack)
+* Access our prototype of the 311 data portal [here](http://dc311portal.codefordc.org/)
+* Download the 311 data from Dropbox [here](https://www.dropbox.com/sh/4j7q53lltasez3h/AACTJgmlkmKE9zlPp1ndYu9Va?dl=0)
+* View our open issues on Trello [here](https://trello.com/b/1u5zLyEJ/code-for-dc-rats)
 
 ## Getting started with R and the 311 data (for newbies)
 We have rolled some starting R code and 311 data into a virtual image that can be accessed using a software called Docker. This allows users to run and modify R code that explores the 2016 311 data without needing to install R and script-dependent R packages.
