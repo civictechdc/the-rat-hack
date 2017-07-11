@@ -197,7 +197,7 @@ server <- function(input, output, session) {
                                               normalize_by_total_requests){
     p = ggplot(selected_time_series_data) +
       geom_bar(aes(x = as.factor(time_aggregation_value),
-                         y = if(normalize_by_total_requests){count/total_requests}else{count}, fill = is_selected), show.legend = FALSE) +
+                         y = if(normalize_by_total_requests){count/total_requests}else{count}, fill = is_selected), stat = "identity", show.legend = FALSE) +
       scale_fill_manual(values = c("black", tableau_color_pal(palette = "tableau10")(1))) +
       labs(title = if(normalize_by_total_requests){"Request Percentage over Time"}else{"Service Requests over Time"}, x = "Month", y = "") +
       theme_bw(base_size = 14) +
