@@ -1,0 +1,39 @@
+
+/*Explore Tab*/
+
+#explore_map {
+  height: calc(100vh - 80px) !important;
+}
+
+#explore_controls {
+  opacity: 0.85;
+  padding: 10px;
+}
+
+#explore_controls:hover {
+  opacity: 1.0;
+}
+
+/*Compare Tab*/
+
+#compare_leftmap {
+  height: calc(100vh - 360px) !important;
+  float: left;
+}
+
+#compare_rightmap {
+  height: calc(100vh - 360px) !important;
+  float: left;
+}
+
+#compare_controls {
+  padding: 10px;
+  margin:auto;
+}
+
+/*Month slider*/
+
+.irs-bar,
+.irs-bar-edge {
+  display: none;
+}
