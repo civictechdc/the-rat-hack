@@ -1,5 +1,6 @@
 gh-pages/
 scripts/demo_shiny_app/.Rhistory
+scripts/demo_shiny_app/data/.Rdata
 .httr-oauth
 yelp_keys.yml
 *.csv
