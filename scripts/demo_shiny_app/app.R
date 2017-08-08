@@ -14,7 +14,8 @@ TOTAL_REQUESTS_SERVICE_CODE <- "XXtotal_requestsXX" # Special key for artificial
 
 ui <- navbarPage(title = "DC 311 Portal",
                  header = tags$head(includeScript("google_analytics.js"),
-                                    includeScript("prettify_slider.js")),
+                                    includeScript("js/prettify_slider.js"),
+                                    includeScript("js/L.Map.Sync.js")),
                  id="tabs",
                  tabPanel("Explore",
                          tags$head(
@@ -420,17 +421,31 @@ server <- function(input, output, session) {
 
   #### Initialize maps ####
   # left panel
+  m1 <- leaflet() %>%
+    setView(lng = -77.0369, lat = 38.9072, zoom = 11) %>%
+    addProviderTiles("CartoDB.PositronNoLabels")%>%
+    htmlwidgets::onRender("
+      function(el, x) {
+        map1 = this;
+      }")
+
+  m2 <- leaflet() %>%
+    setView(lng = -77.0369, lat = 38.9072, zoom = 11) %>%
+    addProviderTiles("CartoDB.PositronNoLabels")%>%
+    htmlwidgets::onRender("
+      function(el, x) {
+        map2 = this;
+        map1.sync(map2)
+        map2.sync(map1)
+      }")
+
   output$compare_leftmap <- renderLeaflet({
-    leaflet() %>%
-      setView(lng = -77.0369, lat = 38.9072, zoom = 11) %>%
-      addProviderTiles("CartoDB.PositronNoLabels")
+    m1
   })
 
   # right panel
   output$compare_rightmap <- renderLeaflet({
-    leaflet() %>%
-      setView(lng = -77.0369, lat = 38.9072, zoom = 11) %>%
-      addProviderTiles("CartoDB.PositronNoLabels")
+    m2
   })
 
   #### Color palette that is updated to match the range of values for the selected service code ####
