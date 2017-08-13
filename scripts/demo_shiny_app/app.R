@@ -42,9 +42,7 @@ ui <- navbarPage(title = "DC 311 Portal",
                           leafletOutput("compare_leftmap", width = "50%", height = "auto"),
                           leafletOutput("compare_rightmap", width = "50%", height = "auto"),
                           fluidRow(id = "compare_controls",
-                            column(4,
-                              checkboxInput("single_service", "Single Service Request", FALSE),
-                              checkboxInput("single_time", "Single Time Frame", FALSE),
+                            column(3,
                               conditionalPanel( condition = "input.single_service == true",
                               selectInput("compare_selected_service_code_single", "Service Request Type",
                                                setNames(c(TOTAL_REQUESTS_SERVICE_CODE, service_codes_and_descriptions$service_code),
@@ -56,25 +54,26 @@ ui <- navbarPage(title = "DC 311 Portal",
                                                              c("Total Requests", service_codes_and_descriptions$service_code_description))),
                               selectInput("compare_selected_service_code_right", "Service Request Type (right)",
                                                setNames(c(TOTAL_REQUESTS_SERVICE_CODE, service_codes_and_descriptions$service_code),
-                                                             c("Total Requests", service_codes_and_descriptions$service_code_description)))),
-                               conditionalPanel( condition = "input.single_time == true",
-                               sliderInput("compare_selected_time_aggregation_value_single", "Month", min(summarized_data$time_aggregation_value), max(summarized_data$time_aggregation_value), value = min(summarized_data$time_aggregation_value), step = 1)
-                               ),
-                               conditionalPanel( condition = "input.single_time == false",
-                               sliderInput("compare_selected_time_aggregation_value_left", "Month (left)", min(summarized_data$time_aggregation_value), max(summarized_data$time_aggregation_value), value = min(summarized_data$time_aggregation_value), step = 1),
-                               sliderInput("compare_selected_time_aggregation_value_right", "Month (right)", min(summarized_data$time_aggregation_value), max(summarized_data$time_aggregation_value), value = min(summarized_data$time_aggregation_value), step = 1)
+                                                             c("Total Requests", service_codes_and_descriptions$service_code_description))))
+                            ),
+                            column(3,
+                              conditionalPanel( condition = "input.single_time == true",
+                              sliderInput("compare_selected_time_aggregation_value_single", "Month", min(summarized_data$time_aggregation_value), max(summarized_data$time_aggregation_value), value = min(summarized_data$time_aggregation_value), step = 1)
                                ),
 
-
+                              conditionalPanel( condition = "input.single_time == false",
+                              sliderInput("compare_selected_time_aggregation_value_left", "Month (left)", min(summarized_data$time_aggregation_value), max(summarized_data$time_aggregation_value), value = min(summarized_data$time_aggregation_value), step = 1),
+                              sliderInput("compare_selected_time_aggregation_value_right", "Month (right)", min(summarized_data$time_aggregation_value), max(summarized_data$time_aggregation_value), value = min(summarized_data$time_aggregation_value), step = 1)
+                               )
+                              ),
+                            column(2,
+                              actionButton("center_compare_maps", "Center maps"),
+                              checkboxInput("single_service", "Single Service Request", FALSE),
+                              checkboxInput("single_time", "Single Time Frame", FALSE),
                               checkboxInput("compare_normalize_by_total_requests", "Display as Percent of Total Requests", FALSE)
-
-                            ),
+                              ),
                             column(4,
-                              plotOutput("compare_request_count_time_series_plot_left", height = 200, width = 300),
-                              plotOutput("compare_request_count_time_series_plot_right", height = 200, width = 300)
-                            ),
-                            column(4,
-                                   actionButton("center_compare_maps", "Center maps")
+                              plotOutput("compare_request_count_time_series_plot", height = 275, width = 400)
                             )
                           )
                         ),
@@ -196,19 +195,29 @@ server <- function(input, output, session) {
 
   update_request_time_series_plot <- function(selected_time_series_data,
                                               normalize_by_total_requests){
-    p = ggplot(selected_time_series_data) +
-      geom_bar(aes(x = as.factor(time_aggregation_value),
-                         y = if(normalize_by_total_requests){count/total_requests}else{count}, fill = is_selected), stat = "identity", show.legend = FALSE) +
-      scale_fill_manual(values = c("black", tableau_color_pal(palette = "tableau10")(1))) +
+    selected_time_series_data_clean <- selected_time_series_data %>%
+      mutate(is_selected_size = ifelse(is_selected, 2, 1))
+    p = ggplot(selected_time_series_data_clean, 
+      aes(x = time_aggregation_value, 
+        y = if(normalize_by_total_requests){count/total_requests}else{count})) +
+      geom_point(aes(size = is_selected_size, colour = panel_point), stat = "identity", show.legend = FALSE) +
+      geom_line(aes(colour = panel_line), stat = "identity") +
+      scale_x_continuous(breaks = 1:12, labels = c("J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D")) +
+      scale_colour_manual(name = "", values = c(
+        "baseline" = "black", 
+        "left" = tableau_color_pal(palette = "tableau10")(1), 
+        "right" = tableau_color_pal(palette = "tableau10")(2)[2])) +
+      scale_size(trans = "identity", limits = c(1,6)) + 
       labs(title = if(normalize_by_total_requests){"Request Percentage over Time"}else{"Service Requests over Time"}, x = "Month", y = "") +
-      theme_bw(base_size = 14) +
-      theme(axis.title.y = element_blank())
+      theme_bw(base_size = 14) + 
+      theme(axis.title.y = element_blank(), legend.justification=c(1,1), legend.position = c(0.95,0.95), legend.margin=margin(t = 0, unit='cm'))
     if(normalize_by_total_requests){
       p + scale_y_continuous(labels = scales::percent)
     } else {
       p
     }
   }
+
 
   #####
   # 'Explore' tab
@@ -232,7 +241,8 @@ server <- function(input, output, session) {
       group_by(time_aggregation_value) %>%
       summarize(count = sum(count),
                 total_requests = sum(total_requests)) %>%
-      mutate(is_selected = ifelse(time_aggregation_value == input$explore_selected_time_aggregation_value, TRUE, FALSE))
+      mutate(is_selected = ifelse(time_aggregation_value == input$explore_selected_time_aggregation_value, TRUE, FALSE)) %>%
+      mutate(panel_point = "baseline", panel_line = "baseline") 
     })
 
   # Initialize map
@@ -246,7 +256,7 @@ server <- function(input, output, session) {
   explore_palette <- reactive({
     get_palette(explore_selected_service_code_data(),
                 input$explore_normalize_by_total_requests)
-  })
+  }) 
 
   # Update polygons when service code or month/week is changed
   observe({
@@ -362,62 +372,76 @@ server <- function(input, output, session) {
   # left panel
   compare_time_series_data_left <- reactive({
     if (input$single_service==TRUE && input$single_time==TRUE){
-
       compare_selected_service_code_data_single() %>%
         group_by(time_aggregation_value) %>%
         summarize(count = sum(count),
                   total_requests = sum(total_requests)) %>%
-        mutate(is_selected = ifelse(time_aggregation_value == input$compare_selected_time_aggregation_value_single, TRUE, FALSE))
+        mutate(is_selected = ifelse(time_aggregation_value == input$compare_selected_time_aggregation_value_single, TRUE, FALSE)) %>%
+        mutate(panel_line = "baseline", panel_point = "baseline")
     } else if (input$single_service==TRUE && input$single_time==FALSE){
       compare_selected_service_code_data_single() %>%
         group_by(time_aggregation_value) %>%
         summarize(count = sum(count),
                   total_requests = sum(total_requests)) %>%
-        mutate(is_selected = ifelse(time_aggregation_value == input$compare_selected_time_aggregation_value_left, TRUE, FALSE))
+        mutate(is_selected = ifelse(time_aggregation_value == input$compare_selected_time_aggregation_value_left, TRUE, FALSE)) %>%
+        mutate(panel_line = "baseline", panel_point = "left")
     } else if (input$single_service==FALSE && input$single_time==TRUE){
       compare_selected_service_code_data_left() %>%
         group_by(time_aggregation_value) %>%
         summarize(count = sum(count),
                   total_requests = sum(total_requests)) %>%
-        mutate(is_selected = ifelse(time_aggregation_value == input$compare_selected_time_aggregation_value_single, TRUE, FALSE))
+        mutate(is_selected = ifelse(time_aggregation_value == input$compare_selected_time_aggregation_value_single, TRUE, FALSE)) %>%
+        mutate(panel_line = "left", panel_point = "left")
     } else {
       compare_selected_service_code_data_left() %>%
         group_by(time_aggregation_value) %>%
         summarize(count = sum(count),
                   total_requests = sum(total_requests)) %>%
-        mutate(is_selected = ifelse(time_aggregation_value == input$compare_selected_time_aggregation_value_left, TRUE, FALSE))
+        mutate(is_selected = ifelse(time_aggregation_value == input$compare_selected_time_aggregation_value_left, TRUE, FALSE)) %>%
+        mutate(panel_line = "left", panel_point = "left")
     }
   })
 
   # right panel
   compare_time_series_data_right <- reactive({
       if (input$single_service==TRUE && input$single_time==TRUE){
-
         compare_selected_service_code_data_single() %>%
           group_by(time_aggregation_value) %>%
           summarize(count = sum(count),
                     total_requests = sum(total_requests)) %>%
-          mutate(is_selected = ifelse(time_aggregation_value == input$compare_selected_time_aggregation_value_single, TRUE, FALSE))
+          mutate(is_selected = ifelse(time_aggregation_value == input$compare_selected_time_aggregation_value_single, TRUE, FALSE)) %>%
+          mutate(panel_line = "baseline", panel_point = "baseline")
       } else if (input$single_service==TRUE && input$single_time==FALSE){
         compare_selected_service_code_data_single() %>%
           group_by(time_aggregation_value) %>%
           summarize(count = sum(count),
                     total_requests = sum(total_requests)) %>%
-          mutate(is_selected = ifelse(time_aggregation_value == input$compare_selected_time_aggregation_value_right, TRUE, FALSE))
+          mutate(is_selected = ifelse(time_aggregation_value == input$compare_selected_time_aggregation_value_right, TRUE, FALSE)) %>%
+          mutate(panel_line = "baseline", panel_point = "right")
       } else if (input$single_service==FALSE && input$single_time==TRUE){
         compare_selected_service_code_data_right() %>%
           group_by(time_aggregation_value) %>%
           summarize(count = sum(count),
                     total_requests = sum(total_requests)) %>%
-          mutate(is_selected = ifelse(time_aggregation_value == input$compare_selected_time_aggregation_value_single, TRUE, FALSE))
+          mutate(is_selected = ifelse(time_aggregation_value == input$compare_selected_time_aggregation_value_single, TRUE, FALSE)) %>%
+          mutate(panel_line = "right", panel_point = "right")
       } else {
         compare_selected_service_code_data_right() %>%
           group_by(time_aggregation_value) %>%
           summarize(count = sum(count),
                     total_requests = sum(total_requests)) %>%
-          mutate(is_selected = ifelse(time_aggregation_value == input$compare_selected_time_aggregation_value_right, TRUE, FALSE))
+          mutate(is_selected = ifelse(time_aggregation_value == input$compare_selected_time_aggregation_value_right, TRUE, FALSE)) %>%
+          mutate(panel_line = "right", panel_point = "right")
       }
   })
+
+  # combine left and right panel data
+  compare_time_series_data <- reactive({
+      bind_rows(compare_time_series_data_left(), compare_time_series_data_right()) %>%
+      distinct(.)
+    })
+      
+    
 
   #### Initialize maps ####
   # left panel
@@ -503,16 +527,11 @@ server <- function(input, output, session) {
 
   #### Update time series chart ####
   # left
-  output$compare_request_count_time_series_plot_left <- renderPlot({
-    update_request_time_series_plot(compare_time_series_data_left(),
+  output$compare_request_count_time_series_plot <- renderPlot({
+    update_request_time_series_plot(compare_time_series_data(),
                                     input$compare_normalize_by_total_requests)
   })
 
-  # right
-  output$compare_request_count_time_series_plot_right <- renderPlot({
-    update_request_time_series_plot(compare_time_series_data_right(),
-                                    input$compare_normalize_by_total_requests)
-  })
 
   #####
   # 'Description' tab
