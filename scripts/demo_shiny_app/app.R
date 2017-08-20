@@ -8,12 +8,13 @@ library(sp)
 
 setwd(getSrcDirectory(function(x){}))
 
-load("./data/demo_shiny_app_data.RData")
+#load("./data/demo_shiny_app_data.RData")
+load("./data/app_data.RData")
 
 TOTAL_REQUESTS_SERVICE_CODE <- "XXtotal_requestsXX" # Special key for artificially inserting 'Total Requests'
 
 ui <- navbarPage(title = "DC 311 Portal",
-                 header = tags$head(includeScript("google_analytics.js"),
+                 header = tags$head(includeScript("js/google_analytics.js"),
                                     includeScript("js/prettify_slider.js"),
                                     includeScript("js/L.Map.Sync.js")),
                  id="tabs",
@@ -28,9 +29,9 @@ ui <- navbarPage(title = "DC 311 Portal",
                                                              c("Total Requests", service_codes_and_descriptions$service_code_description))),
                                         checkboxInput("explore_normalize_by_total_requests", "Display as Percent of Total Requests", FALSE),
                                         sliderInput("explore_selected_time_aggregation_value", "Month",
-                                                    min(summarized_data$time_aggregation_value),
-                                                    max(summarized_data$time_aggregation_value),
-                                                    value = min(summarized_data$time_aggregation_value),
+                                                    min(app_data$anc$summarized_data$time_aggregation_value),
+                                                    max(app_data$anc$summarized_data$time_aggregation_value),
+                                                    value = min(app_data$anc$summarized_data$time_aggregation_value),
                                                     step = 1),
                                         plotOutput("explore_request_count_time_series_plot", height = 200),
                                         actionButton("center_explore_map", "Center map"))
@@ -58,12 +59,21 @@ ui <- navbarPage(title = "DC 311 Portal",
                             ),
                             column(3,
                               conditionalPanel( condition = "input.single_time == true",
-                              sliderInput("compare_selected_time_aggregation_value_single", "Month", min(summarized_data$time_aggregation_value), max(summarized_data$time_aggregation_value), value = min(summarized_data$time_aggregation_value), step = 1)
+                              sliderInput("compare_selected_time_aggregation_value_single", "Month",
+                                          min(app_data$anc$summarized_data$time_aggregation_value),
+                                          max(app_data$anc$summarized_data$time_aggregation_value),
+                                          value = min(app_data$anc$summarized_data$time_aggregation_value), step = 1)
                                ),
 
                               conditionalPanel( condition = "input.single_time == false",
-                              sliderInput("compare_selected_time_aggregation_value_left", "Month (left)", min(summarized_data$time_aggregation_value), max(summarized_data$time_aggregation_value), value = min(summarized_data$time_aggregation_value), step = 1),
-                              sliderInput("compare_selected_time_aggregation_value_right", "Month (right)", min(summarized_data$time_aggregation_value), max(summarized_data$time_aggregation_value), value = min(summarized_data$time_aggregation_value), step = 1)
+                              sliderInput("compare_selected_time_aggregation_value_left", "Month (left)",
+                                          min(app_data$anc$summarized_data$time_aggregation_value),
+                                          max(app_data$anc$summarized_data$time_aggregation_value),
+                                          value = min(app_data$anc$summarized_data$time_aggregation_value), step = 1),
+                              sliderInput("compare_selected_time_aggregation_value_right", "Month (right)",
+                                          min(app_data$anc$summarized_data$time_aggregation_value),
+                                          max(app_data$anc$summarized_data$time_aggregation_value),
+                                          value = min(app_data$anc$summarized_data$time_aggregation_value), step = 1)
                                )
                               ),
                             column(2,
@@ -77,10 +87,37 @@ ui <- navbarPage(title = "DC 311 Portal",
                             )
                           )
                         ),
-                   tabPanel("Description", uiOutput("description"))
+                   tabPanel("Description", uiOutput("description")),
+                   tabPanel("Settings",
+                            selectInput("selected_spatial_aggregation_unit",
+                                        "Display Data by",
+                                        list("ANC" = "anc",
+                                             "Ward" = "ward",
+                                             "Census Tract" = "census_tract")))
                  )
 
 server <- function(input, output, session) {
+  
+  #####
+  # Get aggregated data by selected spatial unit
+  #
+  
+  app_data_for_selected_spatial_aggregation_unit <- reactive({
+    app_data[[input$selected_spatial_aggregation_unit]]
+  })
+  
+  summarized_data <- reactive({
+    app_data_for_selected_spatial_aggregation_unit()$summarized_data 
+  })
+  
+  total_request_data <- reactive({
+    app_data_for_selected_spatial_aggregation_unit()$total_request_data
+  })
+  
+  spatial_polygon_data <- reactive({
+    app_data_for_selected_spatial_aggregation_unit()$spatial_polygon_data
+  })
+    
 
   #####
   # Helper functions
@@ -89,25 +126,27 @@ server <- function(input, output, session) {
 
   get_selected_service_code_data <- function(selected_service_code) {
     if (selected_service_code == TOTAL_REQUESTS_SERVICE_CODE) {
-      total_request_data %>%
+      total_request_data() %>%
         mutate(count = total_requests) # Add this column to make the code below work without modification
     } else {
-      summarized_data %>%
+      summarized_data() %>%
         filter(service_code == selected_service_code) %>%
-        left_join(total_request_data, by = c("year", "census_tract", "time_aggregation_value")) # adds 'total_requests' column
+        left_join(total_request_data(),
+                  by = c("year", "spatial_aggregation_value", "time_aggregation_value")) # adds 'total_requests' column
     }
   }
 
   get_map_data <- function(selected_service_code_data,
                            selected_time_aggregation_value,
                            normalize_by_total_requests) {
-    census_tract_data %>%
+    spatial_polygon_data() %>%
       merge(selected_service_code_data %>%
               filter(time_aggregation_value == selected_time_aggregation_value,
-                     !is.na(census_tract)) %>%
-              rename(TRACT = census_tract) %>%
+                     !is.na(spatial_aggregation_value)) %>%
+              rename_(.dots = setNames("spatial_aggregation_value",
+                                       app_data_for_selected_spatial_aggregation_unit()$spatial_unit_column_name)) %>%
               mutate(map_metric = if(normalize_by_total_requests){count/total_requests}else{count}),
-            by = "TRACT")
+            by = app_data_for_selected_spatial_aggregation_unit()$spatial_unit_column_name)
   }
 
   get_palette <- function(selected_service_code_data,
@@ -118,14 +157,14 @@ server <- function(input, output, session) {
     } else {
       if (!normalize_by_total_requests) {
         domain <- c(0, selected_service_code_data %>%
-                      filter(!is.na(census_tract)) %>%
+                      filter(!is.na(spatial_aggregation_value)) %>%
                       select(count) %>%
                       unlist %>%
                       max)
         bins <- max(min(max(domain)-min(domain), 8), 2)
       } else {
         domain <- c(0, selected_service_code_data %>%
-                      filter(!is.na(census_tract)) %>%
+                      filter(!is.na(spatial_aggregation_value)) %>%
                       mutate(relative_count = count / total_requests) %>%
                       select(relative_count) %>%
                       unlist %>%
@@ -140,7 +179,13 @@ server <- function(input, output, session) {
 
   update_polygons <- function(map_id,
                               map_data,
-                              palette) {
+                              palette,
+                              redraw = FALSE) {
+    if (redraw) {
+      leafletProxy(map_id) %>%
+        clearShapes()
+    }
+    
     leafletProxy(map_id, data = map_data) %>%
       addPolygons(
         stroke = TRUE,
@@ -148,10 +193,19 @@ server <- function(input, output, session) {
         weight = 1,
         fillColor = ~palette(map_metric),
         fillOpacity = 0.7,
-        smoothFactor = 0.5,
-        layerId = ~TRACT, # Using a layerId enables efficient redrawing without clearing polygons
-        label = ~paste0("Tract ", substr(TRACT, 3, 6),
-                        ": ", count, ifelse(is.na(count) | count != 1, " requests", " request")),
+        smoothFactor = 0.5, 
+        layerId = as.formula(paste0("~",  # Using a layerId enables efficient redrawing without clearing polygons
+                                    app_data_for_selected_spatial_aggregation_unit()$spatial_unit_column_name)),
+        label = if (input$selected_spatial_aggregation_unit == "anc") {
+          ~paste0("ANC ", ANC_ID,
+                  ": ", count, ifelse(is.na(count) | count != 1, " requests", " request"))
+        } else if (input$selected_spatial_aggregation_unit == "ward") {
+          ~paste0("Ward ", WARD_ID,
+                  ": ", count, ifelse(is.na(count) | count != 1, " requests", " request"))
+        } else { #census_tract
+          ~paste0("Tract ", substr(TRACT, 3, 6),
+                  ": ", count, ifelse(is.na(count) | count != 1, " requests", " request"))
+        },
         highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = TRUE)
       )
   }
@@ -257,16 +311,26 @@ server <- function(input, output, session) {
     get_palette(explore_selected_service_code_data(),
                 input$explore_normalize_by_total_requests)
   }) 
-
-  # Update polygons when service code or month/week is changed
+  
+  # Update polygons when service code or month/week is changed, redrawing if aggregation has changed
+  explore_redraw <- FALSE
+  
+  observe({
+    input$selected_spatial_aggregation_unit
+    explore_redraw <<- TRUE
+  })
+  
   observe({
     update_polygons("explore_map",
                     explore_map_data(),
-                    explore_palette())
+                    explore_palette(),
+                    redraw = explore_redraw)
+    if (explore_redraw) {
+      explore_redraw <<- FALSE
+    }
   })
 
   # center map function
-
   observeEvent(input$center_explore_map, {
     leafletProxy("explore_map") %>%
       setView(lng = -77.0369, lat = 38.9072, zoom = 12)
@@ -285,7 +349,6 @@ server <- function(input, output, session) {
     update_request_time_series_plot(explore_time_series_data(),
                                     input$explore_normalize_by_total_requests)
   })
-
 
 
   #####
@@ -494,7 +557,14 @@ server <- function(input, output, session) {
                   input$compare_normalize_by_total_requests)
     }
   })
-
+  
+  compare_redraw <- FALSE
+  
+  observe({
+    input$selected_spatial_aggregation_unit
+    compare_redraw <<- TRUE
+  })
+  
   observe({
     if (identical(input$tabs, "Compare")) {
 
@@ -503,12 +573,18 @@ server <- function(input, output, session) {
 
     update_polygons("compare_leftmap",
                     compare_map_data_left(),
-                    compare_palette_left())
+                    compare_palette_left(),
+                    redraw = compare_redraw)
 
     # right
     update_polygons("compare_rightmap",
                     compare_map_data_right(),
-                    compare_palette_right())
+                    compare_palette_right(),
+                    redraw = compare_redraw)
+    
+    if (compare_redraw) {
+      compare_redraw <<- FALSE
+    }
 
     #### Update legend when service code is changed ####
 
