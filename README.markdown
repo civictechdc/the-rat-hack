@@ -30,7 +30,7 @@ $ sudo docker run -d -p 8787:8787 codefordc2/explore-311-data-in-r
 ```
 4. Finally, navigate to localhost:8787 in your favorite browser by pasting "localhost:8787" into the URL bar. If prompted to log in to the RStudio instance, the username and password are both 'rstudio'. You should now see a running version of RStudio with scripts and data related to the 311 data. Now you can run the scripts, view figures, and edit the code in the browser as if you had RStudio running locally on your computer.
 
-## Getting started with our Github project (for contributors)
+## Contributing code to our Github project (for advanced users)
 
 Start by forking the repository, and then cloning the forked version of the repository to your computer. We use a triangular workflow - you should push to your fork, but fetch/pull from the Code for DC repo. Setting this up is easy. Use these commands:
 ```
