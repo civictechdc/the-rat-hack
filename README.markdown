@@ -8,6 +8,12 @@ The goals for our project are 2-fold:
   1. Develop models that can predict long-term trends in rodent complaints. These models will be complementary to ongoing OCTO efforts.
   2. Build out features on a public-facing [311 data portal](http://dc311portal.codefordc.org/) that allows users to examine trends in service complaints over time and in their neighborhoods. This data portal will encompass all nuisance-related service complains, not just those related to rodents.
 
+### Join the Project
+
+1. Join the "rats" channel on the [Code for DC slack!](https://codefordc.org/joinslack)
+
+2. Hack with us at the next [Code for DC Meetup](https://www.meetup.com/Code-for-DC/)
+
 ### Getting Started
 **Check out our live [311 Data Portal](http://dc311portal.codefordc.org/)**
 
@@ -16,11 +22,6 @@ Clone our project or get started with some starter code as a newbie on our [Gith
 Download our clean [311 Data](https://www.dropbox.com/sh/4j7q53lltasez3h/AACTJgmlkmKE9zlPp1ndYu9Va?dl=0)
 
 Take a look at the ongoing project tasks on our [Trello Board](https://trello.com/b/1u5zLyEJ/code-for-dc-rats)
-
-### Other resources
-Check out the "rats" channel on the [Code for DC slack!](https://codefordc.org/joinslack)
-
-Join us at the next [Code for DC Meetup](https://www.meetup.com/Code-for-DC/)
 
 ### Heatmap for 2006 311 rodent abatement requests 
 yellow (fewest) --> red (most complaints)
