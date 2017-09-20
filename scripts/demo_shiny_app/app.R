@@ -27,7 +27,8 @@ ui <- navbarPage(title = "DC 311 Portal",
                                         selectInput("explore_selected_service_code", "Service Request Type",
                                                     setNames(c(TOTAL_REQUESTS_SERVICE_CODE, service_codes_and_descriptions$service_code),
                                                              c("Total Requests", service_codes_and_descriptions$service_code_description))),
-                                        checkboxInput("explore_normalize_by_total_requests", "Display as Percent of Total Requests", FALSE),
+                                        conditionalPanel(condition = paste0("input.explore_selected_service_code != '", TOTAL_REQUESTS_SERVICE_CODE, "'"),
+                                                         checkboxInput("explore_normalize_by_total_requests", "Display as Percent of Total Requests", FALSE)),
                                         sliderInput("explore_selected_time_aggregation_value", "Month",
                                                     min(app_data$anc$summarized_data$time_aggregation_value),
                                                     max(app_data$anc$summarized_data$time_aggregation_value),
@@ -286,7 +287,8 @@ server <- function(input, output, session) {
   explore_map_data <- reactive({
     get_map_data(explore_selected_service_code_data(),
                  input$explore_selected_time_aggregation_value,
-                 input$explore_normalize_by_total_requests)
+                 (input$explore_selected_service_code != TOTAL_REQUESTS_SERVICE_CODE) & 
+                   input$explore_normalize_by_total_requests)
   })
 
   # Data for the time series chart of requests for the selected service code
@@ -309,7 +311,8 @@ server <- function(input, output, session) {
   # Color palette that is updated to match the range of values for the selected service code
   explore_palette <- reactive({
     get_palette(explore_selected_service_code_data(),
-                input$explore_normalize_by_total_requests)
+                (input$explore_selected_service_code != TOTAL_REQUESTS_SERVICE_CODE) & 
+                  input$explore_normalize_by_total_requests)
   }) 
   
   # Update polygons when service code or month/week is changed, redrawing if aggregation has changed
@@ -341,7 +344,8 @@ server <- function(input, output, session) {
     update_legend("explore_map",
                   explore_selected_service_code_data(),
                   explore_palette(),
-                  input$explore_normalize_by_total_requests)
+                  (input$explore_selected_service_code != TOTAL_REQUESTS_SERVICE_CODE) & 
+                    input$explore_normalize_by_total_requests)
   })
 
   # Update time series chart
