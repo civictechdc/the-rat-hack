@@ -1,6 +1,10 @@
 # Code for DC - The Rat Hack
 
-This is the Code for DC rats project. We are exploring data on rodent abatement complaints submitted to DC 311. The short-term goal is to visualize historical data on 311 calls and search for simple correlations with potential mechanisms for rat complaints. The long-term goal is to develop a model that can predict clusters of 311 rodent complaints in time and space, as an informative tool for city managers.
+Orkin Pest Control recently named Washington DC the third "rattiest" city in America, and long-time DC residents know that rodent populations have been on the rise. Mayor Bowser announced a "Rat Riddance" intitiative in 2016, which aims to reduce rodent populations through changes in commercial practice and community awareness campaigns. In support of these efforts, the DC Office of the Chief Technology Officer (OCTO) has been analyzing 311 service request data related to rodent abatement requests and developing models to predict upticks in rat-related complaints in space and time.
+
+The goals for our project are 2-fold:
+  1. Develop models that can predict long-term trends in rodent complaints. These models will be complementary to ongoing OCTO efforts.
+  2. Build out features on a public-facing [311 data portal](http://dc311portal.codefordc.org/) that allows users to examine trends in service complaints over time and in their neighborhoods. This data portal will encompass all nuisance-related service complains, not just those related to rodents.
 
 ## Quick Links
 * Check out the "rats" channel on the [Code for DC slack!](https://codefordc.org/joinslack)
@@ -48,7 +52,7 @@ Now instead of plain `git push` and `git pull`, use these:
 
 ```
 $ git push origin <branch-name>       #pushes to your forked repo
-$ git pull codefordc <branch-name>   #fetches and merges from the codefordc repo
+$ git pull codefordc <branch-name>    #fetches and merges from the codefordc repo
 ```
 
 Here’s [more information](https://github.com/blog/2042-git-2-5-including-multiple-worktrees-and-triangular-workflows#improved-support-for-triangular-workflows) on setting up triangular workflows (scroll to “Improved support…”).
