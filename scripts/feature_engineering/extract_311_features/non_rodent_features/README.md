@@ -2,7 +2,7 @@ This is a python script that will generate a feature table as described below.
 
 Sample usage:
 
-./extract_non_rodent_features.py ~/Dropbox/Elizabeth\ Shared/Code_for_DC/Rats/data/311/clean/years_combined/ ~/Dropbox/Elizabeth\ Shared/Code_for_DC/Rats/data/dc_census_block_shapefiles/census_2010/tl_2016_11_tabblock10.shp non_rodent_features.csv
+./extract_non_rodent_features.py ../../../../Rats/data/311/clean/years_combined/ ../../../../data/dc_census_block_shapefiles/census_2010/tl_2016_11_tabblock10.shp non_rodent_features.csv
 
 Here is the original issue (#8 from the Hackathon) on GitHub:
 
