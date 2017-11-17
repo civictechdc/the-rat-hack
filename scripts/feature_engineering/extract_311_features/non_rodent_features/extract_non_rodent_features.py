@@ -52,10 +52,10 @@ frame_nonRodent.crs = {'init': 'epsg:4326'}
 census_blocks = geopandas.GeoDataFrame.from_file(sys.argv[2])#'E:/VM/DOHHackathon/DC DOH Hackathon 2017/data sets/shapefiles and geospatial information/dc_2010_block_shapefiles/tl_2016_11_tabblock10.shp')
 census_blocks.crs = {'init': 'epsg:4326'}
  
-# result = geopandas.tools.sjoin(frame_nonRodent, census_blocks[['GEOID', 'geometry']], how='inner')
-result = geopandas.tools.sjoin(frame_nonRodent[['geometry']], census_blocks[['GEOID', 'geometry']], how='left')
+# result = geopandas.tools.sjoin(frame_nonRodent, census_blocks[['GEOID10', 'geometry']], how='inner')
+result = geopandas.tools.sjoin(frame_nonRodent[['geometry']], census_blocks[['GEOID10', 'geometry']], how='left')
  
-frame_nonRodent['census_block'] = result['GEOID']
+frame_nonRodent['census_block'] = result['GEOID10']
 frame_nonRodent = frame_nonRodent[column_names + ['census_block']]
 
 
