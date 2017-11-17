@@ -27,8 +27,8 @@ rodent_data_spatial = sp::SpatialPointsDataFrame(coords = rodent_data[, c("LONGI
                                                  data = rodent_data,
                                                  proj4string=sp::CRS("+proj=longlat +datum=WGS84"))
 rodent_data_spatial_block = sp::over(x = rodent_data_spatial, y = census_block_data) %>%
-  select(BLOCKCE10) %>%
-  rename(census_block_2010 = BLOCKCE10)
+  select(GEOID10) %>%
+  rename(census_block_2010 = GEOID10)
 
 rodent_data_with_block = rodent_data %>% bind_cols(rodent_data_spatial_block)
 
