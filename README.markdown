@@ -40,11 +40,11 @@ Start by forking the repository, and then cloning the forked version of the repo
 ```
 $ git clone <url-of-your-fork>
 $ cd the-rat-hack
-$ git remote add codefordc https://github.com/eclee25/the-rat-hack.git
+$ git remote add codefordc https://github.com/codefordc/the-rat-hack.git
 $ git remote -v
   #you should see this:
-  codefordc       https://github.com/eclee25/the-rat-hack.git (fetch)
-  codefordc       https://github.com/eclee25/the-rat-hack.git (push)
+  codefordc       https://github.com/codefordc/the-rat-hack.git (fetch)
+  codefordc       https://github.com/codefordc/the-rat-hack.git (push)
   origin          <your/forked/url> (push)
   origin          <your/forked/url> (fetch)
 ```
