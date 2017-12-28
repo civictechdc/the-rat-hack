@@ -6,9 +6,9 @@ This script reads in restaurant inspection data from file and writes out a file 
 
 The script takes 3 arguments:
 
--1 The disk location of the inspection data csv file,
--2 The disk location of the inspection census block csv file,
--3 The disk location of the resulting output file
+1. The disk location of the inspection data csv file,
+2. The disk location of the inspection census block csv file,
+3. The disk location of the resulting output file
 
 ## Output
 
@@ -18,7 +18,8 @@ The script writes a file to disk at the location of the third argument containin
 
 ### File Handling
 
-The script will fail with R error messages if input arguments are file locations that do not exist or are unavailable on the system.  
+The script will fail with R error messages if input arguments are file locations that do not exist or are unavailable on the system.
+
 ### Input Summary File
 
 The corresponding file for argument 1 is expected to be a large inspection summary table.  In order for the script to function properly, this file will at minimum need the following columns:
@@ -58,10 +59,9 @@ The output file will be written to the location of the third argument.  The outp
 * feature_id - Contains the string "restaurant_inspection_complaints" in all rows
 * feature_type - Corresponds to establishment_type column in the input summary file
 * feature_subtype - Corresponds to risk_category in the input summary file
-* year - obtained from inspection_date column in the input summary file using lubridate::year  
+* year - obtained from inspection_date column in the input summary file using lubridate::year
 * week - obtained from inspection_date column in the input summary file using lubridate::week
 * census_block_2010 - obtained from census_block column in location file
 * value - The sum of complaints in this combination of establishment, risk category, year, week, and census block entries
 
 Each row of the output will correspond to a specific combination of establishment, risk category, year, week, and block.  There should be no duplicate rows.
-
