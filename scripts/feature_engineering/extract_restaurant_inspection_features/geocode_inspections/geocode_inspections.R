@@ -5,13 +5,6 @@ library(tigris)
 library(sf)
 
 args = commandArgs(trailingOnly=TRUE)
-setwd(getSrcDirectory(function(x){}))
-args =
-  c("C:\\Users\\jason\\Dropbox\\Repositories\\dc_restaurant_inspections\\output\\potential_inspection_summary_data.csv",
-    "restaurant_inspections_geocoded.csv")
-# args = 
-#   c("C:\\Users\\jason\\Dropbox\\Repositories\\dc_restaurant_inspections\\backup\\potential_inspection_summary_data.csv",
-#     NA)
 
 # Load the data
 inspection_summary_data = read_csv(args[1],
@@ -110,7 +103,7 @@ get_geocode = function(addresses, GEOCODE_CACHE_LOCATION = "geocode_cache/cache.
   
   # After that, use Google assuming the number of missing addresses is small (could run into query limit)
   MAX_GOOGLE_REQUESTS = 10
-  PAUSE_TIME = 0.1 #Seconds
+  PAUSE_TIME = 0.2 #Seconds
   if (nrow(mar_results) > 0) {
     addresses_to_lookup_google =
       mar_results %>%
@@ -162,21 +155,5 @@ output_data = output_data %>%
               mutate(census_block_2010 = mapped_census_blocks) %>%
               st_set_geometry(NULL),
             by = "inspection_id")
-
-# leaflet::leaflet(census_block_data %>%
-#                    filter(GEOID10 %in% mapped_census_blocks)) %>%
-#   leaflet::addPolygons(popup = ~as.character(GEOID10)) %>%
-#   leaflet::addMarkers(data = output_data, popup = ~as.character(inspection_id))
-
-# leaflet::leaflet(tigris::block_groups(state = "DC") %>%
-#                    st_transform(crs = 4326)) %>%
-#   leaflet::addPolygons(popup = ~as.character(GEOID)) %>%
-#   leaflet::addMarkers(data = output_data, popup = ~as.character(inspection_id))
-
-# ggplot(output_data %>%
-#          filter(!is.na(lat)) %>%
-#          st_as_sf(coords = c("lon", "lat"), crs = 4326) %>%
-#          filter(1:n() <= 1e4)) +
-#   geom_sf()
 
 write_csv(output_data, args[2])
