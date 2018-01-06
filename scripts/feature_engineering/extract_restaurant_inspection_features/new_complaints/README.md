@@ -14,6 +14,9 @@ The script takes 3 arguments:
 
 The script writes a file to disk at the location of the third argument containing standarized feature data.  This file is formatted as csv with a heading row.  User should include full name and extension in the third argument.
 
+Sample usage:
+./extract_new_complaints.R ../../../../data/dc_restaurant_inspections/potential_inspection_summary_data.csv ../../../../data/dc_restaurant_inspections/restaurant_inspections_geocoded.csv new_complaints.csv
+
 ## Notes
 
 ### File Handling
@@ -48,8 +51,6 @@ The script requires the following R packages:
 * lubridate
 * dplyr
 * readr
-* magrittr
-* tibble
 * tidyr
 
 ### Output Feature File
