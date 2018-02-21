@@ -1,0 +1,6 @@
+@import url('https://unpkg.com/leaflet@1.2.0/dist/leaflet.css');
+
+.map__reactleaflet {
+  height: 700px;
+  width: 1000px;
+}
