@@ -5,6 +5,8 @@ import geopandas.tools
 from shapely.geometry import Point
 import math
 import sys
+import datetime
+from datetime import timedelta
 
 
 def derive_census_block_from_coords(data):
@@ -29,41 +31,36 @@ def derive_census_block_from_coords(data):
 
 
 def get_data_from_row(row, feature_type):
-    dict = {'issue_year': row['issue_year'], 'issue_week': row['issue_week'], 'effective_year': row['effective_year'],
-            'effective_week': row['effective_week'], 'expiration_year': row['expiration_year'],
-            'expiration_week': row['expiration_week'], 'latitude': row['Y'], 'longitude': row['X'],
+    dict = {'issue_date': row['ISSUEDATE'], 'effective_date': row['EFFECTIVEDATE'],
+            'expiration_date': row['EXPIRATIONDATE'], 'latitude': row['Y'], 'longitude': row['X'],
             'feature_type': feature_type, 'census_block' : row['census_block']}
 
     list = []
-    if math.isnan(dict['issue_week']) or math.isnan(dict['issue_year']):
+    if math.isnan(row['issue_week']):
         return list
 
     for i in range(4):
-        if dict['issue_week'] + i <= 52:
-            week = dict['issue_week'] + i
-            year = dict['issue_year']
-        else:
-            year = dict['issue_year'] + 1
-            week = dict['issue_week'] + i - 52
-        error = "Week was " + str(week) + "and original issue week was" + str(dict['issue_week'])
-        assert (week <= 52), error
+        date = row['ISSUEDATE'] + timedelta(weeks=i)
+        week = date.isocalendar()[1]
+        year = date.isocalendar()[0]
+        error = "Week was " + str(week) + "."
+        assert (week <= 53), error
         list.append({'feature_id': 'construction_permits_issued_last_4_weeks', 'feature_type': dict['feature_type'],
                      'feature_subtype': '', 'year': year, 'week': week, 'census_block': dict['census_block']})
 
-    effective_week = dict['effective_week']
-    expiration_week = dict['expiration_week']
-    effective_year = dict['effective_year']
-    expiration_year = dict['expiration_year']
-    index = effective_year * 52 + effective_week
-    limit = expiration_year * 52 + expiration_week
-    while index <= limit:
-        current_year = math.floor(index / 52)
-        current_week = (index % 52) + 1
-        assert (0 < current_week <= 52)
+
+    current_date = row['EFFECTIVEDATE']
+
+    i = 0
+    while current_date <= row['EXPIRATIONDATE']:
+        current_date = current_date + timedelta(weeks=i)
+        current_year = current_date.isocalendar()[0]
+        current_week = current_date.isocalendar()[1]
+        assert (0 < current_week <= 53)
         list.append({'feature_id': 'construction_permits_in_effect', 'feature_type': dict['feature_type'],
                      'feature_subtype': '', 'year': current_year, 'week': current_week,
                      'census_block': dict['census_block']})
-        index += 1
+        i += 1
     return list
 
 
