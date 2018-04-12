@@ -27,4 +27,4 @@ A CSV file with the format given below:
 `year`: The ISO-8601 year of the feature value
 `week`: The ISO-8601 week number of the feature value
 `census_block_2010`: The 2010 Census Block of the feature value
-`value`: The value of the feature, i.e. the number of new building permits of the specified types and subtypes issued in the given census block during the previous 4 weeks starting from the year and week above.
+`value`: The value of the feature, i.e. the number of new building permits of the specified types and subtypes issued in the given census block during the previous 4 weeks starting from the year and week above.  
