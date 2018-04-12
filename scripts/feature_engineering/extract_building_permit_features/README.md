@@ -1,5 +1,7 @@
 This is a python script that will generate a feature table as described below.
 
+Adapted from [issue 3](https://github.com/jasonasher/dc_doh_hackathon/tree/master/issue_3) in the dc_doh_hackathon.
+
 When running the script, please provide the following arguments:
 1. Path to the folder containing the source building permit data csv files.
 2. Path to the shape file.
