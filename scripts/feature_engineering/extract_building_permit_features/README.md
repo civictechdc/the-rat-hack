@@ -11,20 +11,20 @@ python building_features_with_census.py C:\RatHackData\Data\Building-Permit-Data
 
 The script will return a feature data table for the number of new building permits issued in the last 4 weeks.
 
-**Input:**
-CSV files with data for each given year
-A shape file
+**Input:**  
+CSV files with data for each given year  
+A shape file  
 
-**Output:**
-A CSV file with the format given below:
+**Output:**  
+A CSV file with the format given below:  
 
-- 1 row for each building permit type and subtype, and each week, year, and census block
-- The data set should include the following columns:
+- 1 row for each building permit type and subtype, and each week, year, and census block  
+- The data set should include the following columns:  
 
-`feature_id`: The ID for the feature, in this case, "building_permits_issued_last_4_weeks"
-`feature_type`: Building permit type
-`feature_subtype`: Building permit subtype
-`year`: The ISO-8601 year of the feature value
-`week`: The ISO-8601 week number of the feature value
-`census_block_2010`: The 2010 Census Block of the feature value
+`feature_id`: The ID for the feature, in this case, "building_permits_issued_last_4_weeks"  
+`feature_type`: Building permit type  
+`feature_subtype`: Building permit subtype  
+`year`: The ISO-8601 year of the feature value  
+`week`: The ISO-8601 week number of the feature value  
+`census_block_2010`: The 2010 Census Block of the feature value  
 `value`: The value of the feature, i.e. the number of new building permits of the specified types and subtypes issued in the given census block during the previous 4 weeks starting from the year and week above.  
