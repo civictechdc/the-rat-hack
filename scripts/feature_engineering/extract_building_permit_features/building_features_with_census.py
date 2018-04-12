@@ -7,10 +7,6 @@ from shapely.geometry import Point
 import sys
 import glob
 
-# argv[1] = 'Building Permits/All_Building_permits.csv'
-# argv[2] = shapefiles and geospatial information/dc_2010_block_shapefiles/tl_2016_11_tabblock10.shp
-# argv[3] =
-
 source_data = sys.argv[1]
 shape_file = sys.argv[2]
 output_file_name = sys.argv[3]
